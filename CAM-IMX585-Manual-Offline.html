@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAM-IMX585-M User Manual</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2; }
+    .logo-text h1 { font-size: 18px; font-weight: 700; color: #0f172a; }
+    .logo-text p  { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+    nav a {
+      font-size: 14px; font-weight: 500; color: #64748b;
+      text-decoration: none; margin-left: 32px;
+      transition: color .2s;
+    }
+    nav a:hover { color: #0f172a; }
+
+    /* ── Container ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Hero ── */
+    .hero { padding: 80px 0; }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .hero-text h2 {
+      font-size: 44px; font-weight: 800; line-height: 1.15;
+      color: #0f172a; margin-bottom: 16px;
+    }
+    .hero-text p { font-size: 18px; color: #475569; line-height: 1.65; }
+    .hero-buttons { display: flex; gap: 12px; margin-top: 28px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 8px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      border: none; text-decoration: none; transition: all .2s;
+    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-outline { background: transparent; color: #334155; border: 1.5px solid #cbd5e1; }
+    .btn-outline:hover { background: #f1f5f9; }
+    .hero-image {
+      background: linear-gradient(135deg, #dbeafe, #eff6ff);
+      border-radius: 20px; padding: 40px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 360px;
+    }
+    .hero-image svg { width: 96px; height: 96px; opacity: .45; }
+    .hero-image p { color: #64748b; margin-top: 12px; font-size: 14px; }
+
+    /* ── Section styles ── */
+    section { padding: 64px 0; }
+    .section-white { background: #fff; }
+    .section-title {
+      font-size: 30px; font-weight: 700; color: #0f172a;
+      margin-bottom: 48px; text-align: center;
+    }
+    .section-title-left { text-align: left; margin-bottom: 32px; }
+
+    /* ── Feature cards ── */
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .card {
+      background: #fff; border: 1px solid #e2e8f0;
+      border-radius: 12px; padding: 24px;
+      transition: box-shadow .2s;
+    }
+    .card:hover { box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+    .card-icon { width: 32px; height: 32px; color: #2563eb; margin-bottom: 14px; }
+    .card-icon svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; }
+    .card h3 { font-size: 17px; font-weight: 600; color: #0f172a; margin-bottom: 8px; }
+    .card p  { font-size: 14px; color: #64748b; line-height: 1.6; }
+
+    /* ── Tabs ── */
+    .tabs-bar {
+      display: flex; gap: 4px;
+      background: #f1f5f9; border-radius: 8px;
+      padding: 4px; width: fit-content; margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 8px 20px; border: none; background: transparent;
+      border-radius: 6px; font-size: 14px; font-weight: 500;
+      color: #64748b; cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Spec rows ── */
+    .spec-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    .spec-row:last-child { border-bottom: none; }
+    .spec-label { font-weight: 600; color: #334155; }
+    .spec-value { color: #64748b; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; padding: 10px 12px; font-weight: 600; color: #334155; border-bottom: 1.5px solid #e2e8f0; }
+    td { padding: 10px 12px; color: #64748b; border-bottom: 1px solid #f1f5f9; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Install cards ── */
+    .install-grid { display: flex; flex-direction: column; gap: 20px; }
+    .install-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 28px; }
+    .install-card h3 { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+    .install-card > p { font-size: 14px; color: #64748b; margin-bottom: 16px; line-height: 1.6; }
+    .pkg-label {
+      font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px;
+    }
+    .pkg-label code {
+      background: #f1f5f9; border-radius: 4px; padding: 2px 8px;
+      font-size: 12px; font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+    .file-list { margin: 8px 0 16px 16px; font-size: 13px; color: #64748b; line-height: 1.8; list-style: disc; }
+    .code-block {
+      background: #0f172a; border-radius: 8px; padding: 16px 18px;
+      font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px;
+      color: #e2e8f0; overflow-x: auto; margin-top: 8px;
+    }
+    .code-block .line { display: block; line-height: 1.7; }
+    .code-block .line::before { content: '$ '; color: #22d3ee; }
+    .code-block .comment { color: #94a3b8; }
+    .config-block {
+      background: #0f172a; border-radius: 8px; padding: 14px 18px;
+      font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px;
+      color: #e2e8f0; margin-top: 6px; margin-bottom: 14px;
+    }
+    .config-item { margin-bottom: 12px; }
+    .config-item-label { font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+    .note-text { font-size: 12px; color: #94a3b8; margin-top: 10px; }
+    .inline-code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px; font-family:'SFMono-Regular',Consolas,monospace; }
+
+    /* ── Testing ── */
+    .test-grid { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Footer ── */
+    footer {
+      background: #0f172a; color: #94a3b8;
+      text-align: center; padding: 36px 24px; margin-top: 0;
+    }
+    footer p { font-size: 14px; line-height: 1.8; }
+    footer a { color: #60a5fa; text-decoration: none; }
+    footer a:hover { color: #93c5fd; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      nav { display: none; }
+      .hero-text h2 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+      </div>
+      <div class="logo-text">
+        <h1>CAM-IMX585-M</h1>
+        <p>Professional Camera Module</p>
+      </div>
+    </div>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#specs">Specifications</a>
+      <a href="#installation">Installation</a>
+      <a href="#testing">Testing</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <h2>Professional 4K MIPI Camera Module</h2>
+        <p>8.3MP monochrome sensor with Starvis 2 technology for exceptional low-light performance and high dynamic range imaging.</p>
+        <div class="hero-buttons">
+          <a href="#installation" class="btn btn-primary">
+            <svg style="width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Installation Guide
+          </a>
+          <a href="#specs" class="btn btn-outline">
+            <svg style="width:16px;height:16px;fill:none;stroke:#334155;stroke-width:2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View Specs
+          </a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+        <p>CAM-IMX585-M Module</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KEY FEATURES -->
+<section class="section-white" id="overview">
+  <div class="container">
+    <h2 class="section-title">Key Features</h2>
+    <div class="features-grid">
+      <div class="card">
+        <div class="card-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <h3>8.3MP 4K Resolution</h3>
+        <p>Native 3840x2160 (4K UHD) with Starvis 2 back-illuminated pixel technology</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg></div>
+        <h3>Exceptional Low-Light</h3>
+        <p>Advanced monochrome sensor delivers clear images even in near-infrared conditions</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg></div>
+        <h3>MIPI CSI-2 Interface</h3>
+        <p>4-lane high-speed interface with 1.5 Gbps per lane for reliable data transmission</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPECIFICATIONS -->
+<section id="specs">
+  <div class="container">
+    <h2 class="section-title section-title-left">Specifications</h2>
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('sensor',this)">Sensor</button>
+      <button class="tab-btn" onclick="switchTab('video',this)">Video Format</button>
+      <button class="tab-btn" onclick="switchTab('interface',this)">Interface</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-sensor">
+      <div class="card" style="padding:0 24px;">
+        <div class="spec-row"><span class="spec-label">Product Model</span><span class="spec-value">CAM-IMX585-M</span></div>
+        <div class="spec-row"><span class="spec-label">Sensor Model</span><span class="spec-value">Sony IMX585 (Monochrome)</span></div>
+        <div class="spec-row"><span class="spec-label">Effective Resolution</span><span class="spec-value">8.3MP</span></div>
+        <div class="spec-row"><span class="spec-label">Optical Format</span><span class="spec-value">1/1.2"</span></div>
+        <div class="spec-row"><span class="spec-label">Pixel Size</span><span class="spec-value">2.9um x 2.9um</span></div>
+        <div class="spec-row"><span class="spec-label">Active Pixels</span><span class="spec-value">3840 (H) x 2160 (V)</span></div>
+        <div class="spec-row"><span class="spec-label">Max Resolution</span><span class="spec-value">3840x2160 (4K UHD)</span></div>
+        <div class="spec-row"><span class="spec-label">Supported RAW Output</span><span class="spec-value">10/12/16-bit</span></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-video">
+      <div class="card" style="padding:0 24px;">
+        <div style="overflow-x:auto;padding:20px 0;">
+          <table>
+            <thead><tr><th>Resolution</th><th>Frame Rate</th><th>Pixel Format</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>1928x1090</td><td>30.00 fps</td><td>R12_CSI2P</td><td>Cropped from 4K</td></tr>
+              <tr><td>3856x2180</td><td>30.00 fps</td><td>R12_CSI2P</td><td>Native sensor readout</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-interface">
+      <div class="card" style="padding:0 24px;">
+        <div class="spec-row"><span class="spec-label">Interface Type</span><span class="spec-value">MIPI CSI-2</span></div>
+        <div class="spec-row"><span class="spec-label">Data Lanes</span><span class="spec-value">4-lane</span></div>
+        <div class="spec-row"><span class="spec-label">Data Rate</span><span class="spec-value">1.5 Gbps per lane</span></div>
+        <div class="spec-row"><span class="spec-label">Connector</span><span class="spec-value">22-pin FPC</span></div>
+        <div class="spec-row"><span class="spec-label">Dimensions</span><span class="spec-value">38mm x 38mm</span></div>
+        <div class="spec-row"><span class="spec-label">Lens Mount</span><span class="spec-value">CS-mount / M12</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALLATION -->
+<section class="section-white" id="installation">
+  <div class="container">
+    <h2 class="section-title section-title-left">Software Installation</h2>
+    <div class="install-grid">
+
+      <div class="install-card">
+        <h3>Automated Installation (Recommended)</h3>
+        <p>The provided <code class="inline-code">install_imx585.sh</code> script automates the installation of the kernel driver and IPA libraries.</p>
+        <div class="code-block">
+          <span class="line">git clone https://github.com/INNO-MAKER/CAM-IMX585.git</span>
+          <span class="line">cd CAM-IMX585</span>
+          <span class="line">chmod +x install_imx585.sh</span>
+          <span class="line">sudo ./install_imx585.sh</span>
+        </div>
+      </div>
+
+      <div class="install-card">
+        <h3>Offline Driver Compilation</h3>
+        <p>For advanced users who need to compile the driver from source:</p>
+        <p class="pkg-label">Package Contents: <code>pkg1-imx585-driver-6.12y-offline.tar.gz</code></p>
+        <ul class="file-list">
+          <li>imx585-v4l2-driver/ -- Kernel driver source code</li>
+          <li>install.sh -- Automated driver installation script</li>
+        </ul>
+        <div class="code-block">
+          <span class="line">tar -xzf pkg1-imx585-driver-6.12y-offline.tar.gz</span>
+          <span class="line">cd pkg1-imx585-driver</span>
+          <span class="line">chmod +x install.sh</span>
+          <span class="line">sudo ./install.sh</span>
+        </div>
+      </div>
+
+      <div class="install-card">
+        <h3>Offline libcamera &amp; rpicam-apps Compilation</h3>
+        <p>For complete offline compilation of libcamera with IMX585 support and rpicam-apps:</p>
+        <p class="pkg-label">Package Contents: <code>pkg2-rpicam-libcamera-offline.tar.gz</code></p>
+        <ul class="file-list">
+          <li>libcamera-imx585/ -- libcamera source with IMX585 IPA support</li>
+          <li>rpicam-apps-imx585/ -- rpicam-apps source</li>
+          <li>build.sh -- Automated build and installation script</li>
+        </ul>
+        <div class="code-block">
+          <span class="line">tar -xzf pkg2-rpicam-libcamera-offline.tar.gz</span>
+          <span class="line">cd pkg2-rpicam-offline</span>
+          <span class="line">chmod +x build.sh</span>
+          <span class="line">sudo ./build.sh<span class="comment">  # Full mode with Qt support</span></span>
+          <span class="line">sudo ./build.sh --lite<span class="comment">  # Lite mode (minimal deps)</span></span>
+        </div>
+        <p class="note-text">Build time: ~30-40 minutes (full mode) or ~15-20 minutes (lite mode)</p>
+      </div>
+
+      <div class="install-card">
+        <h3>Manual Configuration</h3>
+        <p>Edit your <code class="inline-code">/boot/firmware/config.txt</code> (Pi 5) or <code class="inline-code">/boot/config.txt</code> (Pi 4) and add one of the following:</p>
+
+        <div class="config-item">
+          <div class="config-item-label">Default (CAM1 port, Color mode):</div>
+          <div class="config-block">camera_auto_detect=0<br>dtoverlay=imx585</div>
+        </div>
+        <div class="config-item">
+          <div class="config-item-label">Use CAM0 port:</div>
+          <div class="config-block">dtoverlay=imx585,cam0</div>
+        </div>
+        <div class="config-item">
+          <div class="config-item-label">Monochrome mode:</div>
+          <div class="config-block">dtoverlay=imx585,mono</div>
+        </div>
+        <div class="config-item">
+          <div class="config-item-label">CAM0 + Monochrome:</div>
+          <div class="config-block">dtoverlay=imx585,cam0,mono</div>
+        </div>
+        <p style="font-size:14px;color:#64748b;margin-top:8px;">Save and reboot your Raspberry Pi.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- TESTING -->
+<section id="testing">
+  <div class="container">
+    <h2 class="section-title section-title-left">Testing the Camera</h2>
+    <div class="test-grid">
+
+      <div class="install-card">
+        <h3>Verify Detection</h3>
+        <p style="font-size:14px;color:#64748b;margin-bottom:14px;">List available cameras:</p>
+        <div class="code-block">
+          <span class="line">rpicam-hello --list-cameras</span>
+        </div>
+      </div>
+
+      <div class="install-card">
+        <h3>Capture Commands</h3>
+        <div style="display:flex;flex-direction:column;gap:18px;">
+          <div>
+            <p style="font-size:14px;font-weight:600;color:#334155;margin-bottom:8px;">Live Preview:</p>
+            <div class="code-block"><span class="line">rpicam-hello -t 0</span></div>
+          </div>
+          <div>
+            <p style="font-size:14px;font-weight:600;color:#334155;margin-bottom:8px;">Capture 4K Image:</p>
+            <div class="code-block"><span class="line">rpicam-still -o 4k_image.jpg --width 3856 --height 2180</span></div>
+          </div>
+          <div>
+            <p style="font-size:14px;font-weight:600;color:#334155;margin-bottom:8px;">Record 4K Video (10 seconds):</p>
+            <div class="code-block"><span class="line">rpicam-vid -t 10000 --width 3856 --height 2180 -o 4k_video.h264</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>CAM-IMX585-M Professional Camera Module | &copy; 2026 INNO-MAKER</p>
+  <p>For technical support, visit <a href="https://www.inno-maker.com">inno-maker.com</a></p>
+</footer>
+
+<script>
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+</script>
+</body>
+</html>
