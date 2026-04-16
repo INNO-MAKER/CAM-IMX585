@@ -105,15 +105,75 @@ The script will perform the following actions:
 - Copy the correct IPA libraries (`ipa_rpi_pisp.so` for Pi 5 or `ipa_rpi_vc4.so` for Pi 4) to the system's `libcamera` directory.
 - Verify the installation by checking loaded modules and V4L2 devices.
 
-### 3.3 Manual Configuration
+### 3.3 Offline Driver Compilation
 
-If you need to manually configure the boot parameters, edit your `/boot/firmware/config.txt` (or `/boot/config.txt` on older OS versions) and add the following overlay:
+For advanced users who need to compile the driver from source:
 
+**Package**: `pkg1-imx585-driver-6.12y-offline.tar.gz`
+
+**Contents**:
+- `imx585-v4l2-driver/` - Kernel driver source code
+- `install.sh` - Automated driver installation script
+
+**Installation**:
+```bash
+$ tar -xzf pkg1-imx585-driver-6.12y-offline.tar.gz
+$ cd pkg1-imx585-driver
+$ chmod +x install.sh
+$ sudo ./install.sh
+```
+
+### 3.4 Offline libcamera & rpicam-apps Compilation
+
+For complete offline compilation of libcamera with IMX585 support and rpicam-apps:
+
+**Package**: `pkg2-rpicam-libcamera-offline.tar.gz`
+
+**Contents**:
+- `libcamera-imx585/` - libcamera source with IMX585 IPA support
+- `rpicam-apps-imx585/` - rpicam-apps source
+- `build.sh` - Automated build and installation script
+
+**Installation**:
+```bash
+$ tar -xzf pkg2-rpicam-libcamera-offline.tar.gz
+$ cd pkg2-rpicam-offline
+$ chmod +x build.sh
+$ sudo ./build.sh           # Full mode with Qt support
+$ sudo ./build.sh --lite    # Lite mode (minimal dependencies)
+```
+
+**Build Time**: ~30-40 minutes (full mode) or ~15-20 minutes (lite mode)
+
+### 3.5 Manual Configuration
+
+Edit your `/boot/firmware/config.txt` (Pi 5) or `/boot/config.txt` (Pi 4) and add one of the following configurations:
+
+**Default (CAM1 port, Color mode)**:
 ```ini
+camera_auto_detect=0
 dtoverlay=imx585
 ```
 
-Reboot your Raspberry Pi for the changes to take effect.
+**Use CAM0 port**:
+```ini
+dtoverlay=imx585,cam0
+```
+
+**Monochrome mode**:
+```ini
+dtoverlay=imx585,mono
+```
+
+**CAM0 + Monochrome**:
+```ini
+dtoverlay=imx585,cam0,mono
+```
+
+Reboot your Raspberry Pi for the changes to take effect:
+```bash
+$ sudo reboot
+```
 
 ---
 
