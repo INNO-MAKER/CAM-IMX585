@@ -72,40 +72,10 @@ This repository provides the necessary drivers, Image Processing Algorithm (IPA)
 
 ### 3.1 Repository Contents
 
-- `imx585.ko`: Pre-compiled kernel driver module.
-- `ipa/`: Directory containing pre-compiled IPA libraries for Raspberry Pi 4 (`ipa_rpi_vc4.so`) and Raspberry Pi 5 (`ipa_rpi_pisp.so`).
-- `install_imx585.sh`: Automated installation script for the driver and IPA libraries.
 - `pkg1-imx585-driver-6.12y-offline.tar.gz`: Offline driver build package.
 - `pkg2-rpicam-libcamera-offline.tar.gz`: Offline libcamera build package.
-- `pre-compiler-driver-ipa.tar.gz`: Pre-compiled driver and IPA package.
 
-### 3.2 Automated Installation (Recommended)
-
-The provided `install_imx585.sh` script automates the installation of the kernel driver and the appropriate IPA libraries for your Raspberry Pi model.
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/INNO-MAKER/CAM-IMX585.git
-   cd CAM-IMX585
-   ```
-
-2. Make the script executable:
-   ```bash
-   chmod +x install_imx585.sh
-   ```
-
-3. Run the installation script with root privileges:
-   ```bash
-   sudo ./install_imx585.sh
-   ```
-
-The script will perform the following actions:
-- Copy the `imx585.ko` driver to the appropriate kernel modules directory.
-- Run `depmod -a` and load the driver using `modprobe`.
-- Copy the correct IPA libraries (`ipa_rpi_pisp.so` for Pi 5 or `ipa_rpi_vc4.so` for Pi 4) to the system's `libcamera` directory.
-- Verify the installation by checking loaded modules and V4L2 devices.
-
-### 3.3 Offline Driver Compilation
+### 3.2 Step 1: Offline Driver Compilation
 
 For advanced users who need to compile the driver from source:
 
@@ -123,7 +93,7 @@ $ chmod +x install.sh
 $ sudo ./install.sh
 ```
 
-### 3.4 Offline libcamera & rpicam-apps Compilation
+### 3.3 Step 2: Offline libcamera & rpicam-apps Compilation
 
 For complete offline compilation of libcamera with IMX585 support and rpicam-apps:
 
@@ -145,7 +115,7 @@ $ sudo ./build.sh --lite    # Lite mode (minimal dependencies)
 
 **Build Time**: ~30-40 minutes (full mode) or ~15-20 minutes (lite mode)
 
-### 3.5 Manual Configuration
+### 3.4 Manual Configuration
 
 Edit your `/boot/firmware/config.txt` (Pi 5) or `/boot/config.txt` (Pi 4) and add one of the following configurations:
 
