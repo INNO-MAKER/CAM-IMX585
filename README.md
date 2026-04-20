@@ -1,6 +1,6 @@
 # CAM-IMX585-M MIPI Camera Module
 
-![CAM-IMX585-M](images/imx585.png)
+![CAM-IMX585-M](imx585.png)
 
 ## 1. Product Overview
 
