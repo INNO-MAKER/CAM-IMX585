@@ -1,19 +1,19 @@
-# CAM-IMX585-M MIPI Camera Module
+# CAM-IMX585-Mono/CAM-IMX585-Color MIPI Camera Module
 
-![CAM-IMX585-M](imx585.png)
+![CAM-IMX585](imx585.png)
 
 ## 1. Product Overview
 
-The **CAM-IMX585-M** is a high-performance monochrome CMOS image sensor designed for demanding imaging applications in embedded systems. Featuring an advanced Starvis 2 back-illuminated pixel structure, this 8.3MP sensor delivers exceptional low-light performance, high dynamic range, and precise image quality across diverse lighting conditions.
+The **CAM-IMX585-Mono** and **CAM-IMX585-Color** are high-performance CMOS image sensors designed for demanding imaging applications in embedded systems. The **Mono** variant features a monochrome sensor for enhanced low-light sensitivity, while the **Color** variant provides full RGB color imaging. Both feature an advanced Starvis 2 back-illuminated pixel structure, delivering 8.3MP resolution with exceptional low-light performance, high dynamic range, and precise image quality across diverse lighting conditions.
 
-With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW output, the CAM-IMX585-M enables professional-grade imaging for surveillance, industrial inspection, machine vision, and embedded vision applications. The sensor's MIPI CSI-2 4-lane interface ensures reliable high-speed data transmission to host processors like Raspberry Pi 5 and NVIDIA Jetson. The on-board **FT24C08A EEPROM** (1 KB) supports camera calibration data storage and I2C-based read/write operations.
+With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW output, the CAM-IMX585-Mono/Color enables professional-grade imaging for surveillance, industrial inspection, machine vision, and embedded vision applications. The sensor's MIPI CSI-2 4-lane interface ensures reliable high-speed data transmission to host processors like Raspberry Pi 5 and NVIDIA Jetson. The on-board **FT24C08A EEPROM** (1 KB) supports camera calibration data storage and I2C-based read/write operations.
 
 *Note: While the sensor supports 10/12/16-bit RAW output, the current driver configuration operates in 12-bit RAW (R12_CSI2P) mode on Raspberry Pi 5.*
 
 ### 1.1 Key Features
 
 - **8.3MP 4K resolution** with Starvis 2 technology
-- **Monochrome sensor** for enhanced low-light sensitivity
+- **Monochrome (Mono)** sensor for enhanced low-light sensitivity / **Color (RGB)** sensor for full-spectrum imaging
 - **MIPI CSI-2 4-lane** high-speed interface
 - **10/12/16-bit RAW output capability** (currently 12-bit)
 - **Excellent low-light performance** with back-illuminated pixels
@@ -37,9 +37,9 @@ With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW outp
 
 | Parameter | Specification |
 | :--- | :--- |
-| **Product Model** | CAM-IMX585-M |
-| **Sensor Model** | Sony IMX585 (Monochrome) |
-| **Sensor Type** | CMOS (Mono) |
+| **Product Model** | CAM-IMX585-Mono / CAM-IMX585-Color |
+| **Sensor Model** | Sony IMX585 (Monochrome) / Sony IMX585 (Color) |
+| **Sensor Type** | CMOS (Mono) / CMOS (Color)
 | **Pixel Technology** | Starvis 2 |
 | **Effective Resolution** | 8.3MP |
 | **Optical Format** | 1/1.2" |
@@ -121,23 +121,24 @@ $ sudo ./build.sh --lite    # Lite mode (minimal dependencies)
 
 Edit your `/boot/firmware/config.txt` (Pi 5) or `/boot/config.txt` (Pi 4) and add one of the following configurations:
 
-**Default (CAM1 port, Color mode)**:
+**Default (CAM1 port, Color mode)** - for CAM-IMX585-Color:
 ```ini
 camera_auto_detect=0
 dtoverlay=imx585
 ```
 
-**Use CAM0 port**:
+**Default (CAM1 port, Monochrome mode)** - for CAM-IMX585-Mono:
+```ini
+camera_auto_detect=0
+dtoverlay=imx585,mono
+```
+
+**Use CAM0 port (Color)**:
 ```ini
 dtoverlay=imx585,cam0
 ```
 
-**Monochrome mode**:
-```ini
-dtoverlay=imx585,mono
-```
-
-**CAM0 + Monochrome**:
+**Use CAM0 port (Monochrome)**:
 ```ini
 dtoverlay=imx585,cam0,mono
 ```
