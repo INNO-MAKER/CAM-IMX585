@@ -74,10 +74,52 @@ This repository provides the necessary drivers, Image Processing Algorithm (IPA)
 
 ### 3.1 Repository Contents
 
-- `pkg1-imx585-driver-6.12y-offline.tar.gz`: Offline driver build package.
+- `precompiler-driver/`: Pre-compiled driver packages for specific OS versions (recommended for quick setup).
+- `pkg1-imx585-driver-6.12y-offline.tar.gz`: Offline driver source build package.
 - `pkg2-rpicam-libcamera-offline.tar.gz`: Offline libcamera build package.
 
-### 3.2 Step 1: Offline Driver Compilation
+---
+
+### 3.2 Option A: Pre-compiled Driver Installation (Recommended)
+
+> ⚠️ **Important Notice**: Pre-compiled driver packages are built for **specific OS versions and kernel versions**. Before installation, please verify that your system's OS version and kernel version match exactly. If they do not match, use **Option B (source compilation)** instead.
+
+The `precompiler-driver/` directory contains pre-compiled kernel modules and IPA files for tested OS versions. Each package is named with the target OS, platform, and kernel version for easy identification.
+
+**Supported Versions:**
+
+| Package | OS | Platform | Kernel |
+| :--- | :--- | :--- | :--- |
+| `imx585_trixie_pi5_k6.12.75+rpt-rpi-2712_20260420-114959.tar.gz` | Raspberry Pi OS Trixie | Pi 5 (2712) | 6.12.75+rpt-rpi-2712 |
+
+**Check your system version before installation:**
+```bash
+# Check OS version
+cat /etc/os-release
+
+# Check kernel version
+uname -r
+```
+
+**Installation:**
+```bash
+# Extract the matching package (replace filename with your version)
+tar -xzf precompiler-driver/imx585_trixie_pi5_k6.12.75+rpt-rpi-2712_20260420-114959.tar.gz
+
+# Run the installation script
+chmod +x install.sh
+sudo ./install.sh
+```
+
+> 📝 **Note**: More pre-compiled packages for additional OS versions will be added as testing is completed. If your OS version is not listed, please use Option B (source compilation).
+
+---
+
+### 3.3 Option B: Offline Driver Compilation (Source)
+
+> Use this option if your OS/kernel version is not listed in the pre-compiled packages above, or if you require a custom build.
+
+#### Step 1: Offline Driver Compilation
 
 For advanced users who need to compile the driver from source:
 
@@ -95,7 +137,7 @@ $ chmod +x install.sh
 $ sudo ./install.sh
 ```
 
-### 3.3 Step 2: Offline libcamera & rpicam-apps Compilation
+#### Step 2: Offline libcamera & rpicam-apps Compilation
 
 For complete offline compilation of libcamera with IMX585 support and rpicam-apps:
 
@@ -117,7 +159,7 @@ $ sudo ./build.sh --lite    # Lite mode (minimal dependencies)
 
 **Build Time**: ~30-40 minutes (full mode) or ~15-20 minutes (lite mode)
 
-### 3.4 Manual Configuration
+### 3.4 Manual Configuration (Both Options)
 
 Edit your `/boot/firmware/config.txt` (Pi 5) or `/boot/config.txt` (Pi 4) and add one of the following configurations:
 
