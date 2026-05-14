@@ -275,6 +275,15 @@ rpicam-vid -t 10000 --width 3856 --height 2180 -o 4k_video.h264
 
 ---
 
-## 6. Support
+## 6. Preset OS Image
+
+A pre-configured Raspberry Pi OS image with all drivers and software pre-installed is available for download:
+
+**Download**: [https://www.jianguoyun.com/p/DWqJpGAQpdSrBxil9p8GIAA](https://www.jianguoyun.com/p/DWqJpGAQpdSrBxil9p8GIAA)  
+**Password**: `exgk55`
+
+---
+
+## 7. Support
 
 For technical support, detailed documentation, and product inquiries, please visit [INNO-MAKER](https://www.inno-maker.com).
