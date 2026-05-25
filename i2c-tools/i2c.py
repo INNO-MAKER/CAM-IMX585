@@ -8,8 +8,7 @@ Pure-Python I2C tool for the IMX585 camera board.  Replaces the prebuilt
 aarch64 ``i2c_read`` / ``i2c_write`` C binaries and bundles a high-level
 helper for the on-board EEPROM that ships with the module:
 
-  * On-board EEPROM FT24C08A (slaves 0x50/0x51/0x52/0x53, 256 bytes
-    each = 1 KB total, 8-bit sub-addr).
+  * On-board EEPROM FT24C02A (slave 0x50, 256 bytes total, 8-bit sub-addr).
 
 Talks to ``/dev/i2c-N`` directly via ``ioctl(I2C_RDWR)``, no smbus2 / i2c-tools
 dependency.  Works on stock Raspberry Pi OS (Bookworm/Trixie, 32-bit & 64-bit).
@@ -22,15 +21,15 @@ EEPROM (Pi5: bus 4 = CAM1, bus 6 = CAM0):
 
     sudo python3 i2c.py eeprom detect  --bus 4
     sudo python3 i2c.py eeprom dump    --bus 4 --out cal.bin
-    sudo python3 i2c.py eeprom read    --bus 4 --chip 0x51 --offset 0 --length 16
-    sudo python3 i2c.py eeprom write   --bus 4 --chip 0x51 --offset 0 --data 0xAA
+    sudo python3 i2c.py eeprom read    --bus 4 --chip 0x50 --offset 0 --length 16
+    sudo python3 i2c.py eeprom write   --bus 4 --chip 0x50 --offset 0 --data 0xAA
     sudo python3 i2c.py eeprom restore --bus 4 --in cal.bin
     sudo python3 i2c.py eeprom clear   --bus 4 --yes
 
 Low-level (drop-in replacement for i2c_read / i2c_write C tools):
 
-    sudo python3 i2c.py read  4 0x51 0x00 16          --reg-bits 8     # EEPROM raw
-    sudo python3 i2c.py write 4 0x51 0x00 0xAA        --reg-bits 8
+    sudo python3 i2c.py read  4 0x50 0x00 16          --reg-bits 8     # EEPROM raw
+    sudo python3 i2c.py write 4 0x50 0x00 0xAA        --reg-bits 8
     sudo python3 i2c.py read  4 0x1a 0x3000 1                          # IMX585 sensor reg
 
 All integer args accept ``0x..``, ``0b..``, ``0o..`` or decimal.
@@ -199,13 +198,13 @@ def reg_write(bus: I2CBus, addr: int, reg: int,
 
 
 # -------------------------------------------------------------------- #
-#  FT24C08A on-board EEPROM helpers
+#  FT24C02A on-board EEPROM helpers
 # -------------------------------------------------------------------- #
 
-EEPROM_CHIPS = (0x50, 0x51, 0x52, 0x53)
-EEPROM_PAGE_SIZE = 256             # bytes per chip
-EEPROM_HW_PAGE = 16                # hardware page-write size for FT24C08A
-EEPROM_TOTAL = EEPROM_PAGE_SIZE * len(EEPROM_CHIPS)   # 1024
+EEPROM_CHIPS = (0x50,)
+EEPROM_PAGE_SIZE = 256             # bytes in the single FT24C02A chip
+EEPROM_HW_PAGE = 16                # hardware page-write size for FT24C02A
+EEPROM_TOTAL = EEPROM_PAGE_SIZE * len(EEPROM_CHIPS)   # 256
 EEPROM_TWR_S = 0.006               # tWR + slack (datasheet says 5ms)
 
 
@@ -216,13 +215,12 @@ def eeprom_detect(bus: I2CBus) -> List[int]:
 def eeprom_read(bus: I2CBus, chip: int, offset: int, length: int) -> bytes:
     chip = _normalize_addr(chip)
     if chip not in EEPROM_CHIPS:
-        raise ValueError(f"chip 0x{chip:02X} is not an EEPROM page (use 0x50..0x53)")
+        raise ValueError(f"chip 0x{chip:02X} is not the EEPROM (use 0x50)")
     if not 0 <= offset <= 0xFF:
         raise ValueError("offset must be 0..255")
     if length < 1 or offset + length > EEPROM_PAGE_SIZE:
         raise ValueError(
-            "read crosses the 256-byte chip boundary - use the next chip "
-            "(0x50 -> 0x51 -> 0x52 -> 0x53) for the next page"
+            "read crosses the 256-byte chip boundary"
         )
     return bus.write_then_read(chip, bytes([offset]), length)
 
@@ -230,12 +228,12 @@ def eeprom_read(bus: I2CBus, chip: int, offset: int, length: int) -> bytes:
 def eeprom_write_block(bus: I2CBus, chip: int, offset: int, data: bytes) -> None:
     """Write any length of bytes starting at (chip, offset).
 
-    Splits on the FT24C08A's 16-byte hardware page boundary and rolls
-    over from chip 0x50 -> 0x51 -> 0x52 -> 0x53 at 256-byte boundaries.
+    Splits on the FT24C02A's 16-byte hardware page boundary.
+    The FT24C02A has a single 256-byte address space at 0x50.
     """
     chip = _normalize_addr(chip)
     if chip not in EEPROM_CHIPS:
-        raise ValueError(f"chip 0x{chip:02X} is not an EEPROM page (use 0x50..0x53)")
+        raise ValueError(f"chip 0x{chip:02X} is not the EEPROM (use 0x50)")
     if not 0 <= offset <= 0xFF:
         raise ValueError("offset must be 0..255")
     if not data:
@@ -255,11 +253,7 @@ def eeprom_write_block(bus: I2CBus, chip: int, offset: int, data: bytes) -> None
         # Only roll over to the next chip if we still have data to write -
         # writing exactly to offset 0xFF must not error out at the boundary.
         if cur_off >= EEPROM_PAGE_SIZE and pos < len(data):
-            idx = EEPROM_CHIPS.index(cur_chip)
-            if idx + 1 >= len(EEPROM_CHIPS):
-                raise ValueError("write ran off the end of the last EEPROM chip (0x53)")
-            cur_chip = EEPROM_CHIPS[idx + 1]
-            cur_off = 0
+            raise ValueError("write ran off the end of the EEPROM (FT24C02A is 256 bytes at 0x50)")
 
 
 def eeprom_dump_all(bus: I2CBus) -> bytes:
@@ -306,7 +300,7 @@ def _autoint(s: str) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="i2c.py",
-        description="IMX585 on-board FT24C08A EEPROM tool. "
+        description="IMX585 on-board FT24C02A EEPROM tool. "
                     "Also a drop-in i2c_read / i2c_write replacement.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="See the top of this script for the full command cheatsheet.",
@@ -330,15 +324,15 @@ def _build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--reg-bits", type=int, default=16, choices=(8, 16))
 
     # --- eeprom ---------------------------------------------------------
-    sp = sub.add_parser("eeprom", help="on-board FT24C08A EEPROM helpers")
+    sp = sub.add_parser("eeprom", help="on-board FT24C02A EEPROM helpers")
     es = sp.add_subparsers(dest="eeprom_cmd", required=True)
 
-    det = es.add_parser("detect", help="probe 0x50..0x53 and report ACKs")
+    det = es.add_parser("detect", help="probe 0x50 and report ACK")
     det.add_argument("--bus", type=_autoint, required=True)
 
     rd = es.add_parser("read", help="read N bytes starting at offset")
     rd.add_argument("--bus",    type=_autoint, required=True)
-    rd.add_argument("--chip",   type=_autoint, required=True, help="0x50, 0x51, 0x52 or 0x53")
+    rd.add_argument("--chip",   type=_autoint, required=True, help="0x50")
     rd.add_argument("--offset", type=_autoint, default=0)
     rd.add_argument("--length", type=_autoint, default=16)
 
@@ -351,16 +345,16 @@ def _build_parser() -> argparse.ArgumentParser:
                    help="byte values, e.g. --data 0xAA 0xBB 0xCC")
     g.add_argument("--from-file", help="path to a binary file to write")
 
-    dp = es.add_parser("dump", help="read all 4 chips (1024 bytes total)")
+    dp = es.add_parser("dump", help="read all 256 bytes")
     dp.add_argument("--bus", type=_autoint, required=True)
-    dp.add_argument("--out", help="save the full 1024-byte blob to this file")
+    dp.add_argument("--out", help="save the full 256-byte blob to this file")
 
-    rs = es.add_parser("restore", help="write a 1024-byte dump back to all 4 chips")
+    rs = es.add_parser("restore", help="write a 256-byte dump back to the chip")
     rs.add_argument("--bus", type=_autoint, required=True)
     rs.add_argument("--in",  dest="infile", required=True,
-                    help="path to a 1024-byte file (typically from `eeprom dump --out`)")
+                    help="path to a 256-byte file (typically from `eeprom dump --out`)")
 
-    cl = es.add_parser("clear", help="erase all 1024 bytes (fills with 0xFF)")
+    cl = es.add_parser("clear", help="erase all 256 bytes (fills with 0xFF)")
     cl.add_argument("--bus",  type=_autoint, required=True)
     cl.add_argument("--fill", type=_autoint, default=0xFF, help="byte to fill with (default 0xFF)")
     cl.add_argument("--yes",  action="store_true", required=True,
@@ -399,15 +393,11 @@ def _cmd_eeprom_detect(args) -> int:
     with I2CBus(args.bus) as bus:
         found = eeprom_detect(bus)
     if not found:
-        print("No EEPROM chips at 0x50..0x53 responded.")
+        print("No EEPROM chip at 0x50 responded.")
         print("  - Check that the camera is connected to the right CSI port.")
         print(f"  - Try `i2cdetect -y {args.bus}` to see what is actually on the bus.")
         return 1
     print("EEPROM chips found:", " ".join(f"0x{a:02X}" for a in found))
-    if len(found) != len(EEPROM_CHIPS):
-        print(f"  WARNING: expected all {len(EEPROM_CHIPS)} chips (0x50..0x53),"
-              f" only saw {len(found)}.")
-        return 1
     return 0
 
 
@@ -491,7 +481,7 @@ def main(argv=None) -> int:
     except OSError as e:
         if e.errno in (errno.ENXIO, errno.EREMOTEIO):
             print(f"I2C transaction failed: device did not ACK (errno={e.errno}).\n"
-                  "  - Check the slave address (EEPROM 0x50..0x53).\n"
+                  "  - Check the slave address (EEPROM 0x50).\n"
                   "  - Make sure no streaming app is hogging the camera.\n"
                   "  - On Pi5 use --bus 4 for CAM1 or --bus 6 for CAM0.",
                   file=sys.stderr)
