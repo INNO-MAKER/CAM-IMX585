@@ -6,7 +6,7 @@
 
 The **CAM-IMX585-Mono** and **CAM-IMX585-Color** are high-performance CMOS image sensors designed for demanding imaging applications in embedded systems. The **Mono** variant features a monochrome sensor for enhanced low-light sensitivity, while the **Color** variant provides full RGB color imaging. Both feature an advanced Starvis 2 back-illuminated pixel structure, delivering 8.3MP resolution with exceptional low-light performance, high dynamic range, and precise image quality across diverse lighting conditions.
 
-With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW output, the CAM-IMX585-Mono/Color enables professional-grade imaging for surveillance, industrial inspection, machine vision, and embedded vision applications. The sensor's MIPI CSI-2 4-lane interface ensures reliable high-speed data transmission to host processors like Raspberry Pi 5 and NVIDIA Jetson. The on-board **FT24C08A EEPROM** (1 KB) supports camera calibration data storage and I2C-based read/write operations.
+With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW output, the CAM-IMX585-Mono/Color enables professional-grade imaging for surveillance, industrial inspection, machine vision, and embedded vision applications. The sensor's MIPI CSI-2 4-lane interface ensures reliable high-speed data transmission to host processors like Raspberry Pi 5 and NVIDIA Jetson. The on-board **FT24C02A EEPROM** (256 bytes) supports camera calibration data storage and I2C-based read/write operations.
 
 *Note: While the sensor supports 10/12/16-bit RAW output, the current driver configuration operates in 12-bit RAW (R12_CSI2P) mode on Raspberry Pi 5.*
 
@@ -17,7 +17,7 @@ With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW outp
 - **MIPI CSI-2 4-lane** high-speed interface
 - **10/12/16-bit RAW output capability** (currently 12-bit)
 - **Excellent low-light performance** with back-illuminated pixels
-- **On-board EEPROM** (FT24C08A) for calibration data storage
+- **On-board EEPROM** (FT24C02A, 256 bytes) for calibration data storage
 - **I2C interface** for EEPROM and sensor register access
 - **Compatible with Raspberry Pi**
 
@@ -194,11 +194,11 @@ $ sudo reboot
 
 ## 4. I2C Tools & EEPROM Access
 
-The camera module includes an on-board **FT24C08A EEPROM** (1 KB total) for storing calibration data and camera parameters. The `i2c-tools/` directory provides a Python-based utility for reading, writing, and managing EEPROM data over I2C.
+The camera module includes an on-board **FT24C02A EEPROM** (256 bytes) for storing calibration data and camera parameters. The `i2c-tools/` directory provides a Python-based utility for reading, writing, and managing EEPROM data over I2C.
 
 ### 4.1 EEPROM Overview
 
-The EEPROM consists of four 256-byte pages at I2C addresses **0x50, 0x51, 0x52, 0x53**, providing 1 KB of persistent storage. This is useful for:
+The FT24C02A is a single-chip EEPROM at I2C address **0x50**, providing 256 bytes of persistent storage. This is useful for:
 - Storing camera calibration coefficients
 - Saving sensor configuration parameters
 - Preserving user-defined settings across power cycles
@@ -238,7 +238,7 @@ sudo python3 i2c-tools/i2c.py eeprom restore --bus 4 --in eeprom_backup.bin
 | CAM1 | `--bus 4` |
 | CAM0 | `--bus 6` |
 
-Not sure? Run `ls /dev/i2c-*` to list available buses, then use `i2cdetect -y 4` (or `-y 6`) to confirm the camera is present — you should see EEPROM chips at addresses 0x50–0x53.
+Not sure? Run `ls /dev/i2c-*` to list available buses, then use `i2cdetect -y 4` (or `-y 6`) to confirm the camera is present — you should see the EEPROM chip at address 0x50.
 
 **For detailed usage**, sensor register access, and troubleshooting, see `i2c-tools/README.md`.
 
