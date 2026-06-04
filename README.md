@@ -275,7 +275,157 @@ rpicam-vid -t 10000 --width 3856 --height 2180 -o 4k_video.h264
 
 ---
 
-## 6. Preset OS Image
+## 6. Jetson Orin Nano
+
+This section covers the prebuilt binary driver package for **Jetson Orin Nano** (JetPack 5.x / L4T 35.x, kernel ABI `5.15.148-tegra`).
+
+> **Package:** `jetson-orin-nano-driver/imx585_tegra_binary_720_working_20260601_v1_2.tar.gz`  
+> **Build date:** 2026-06-01 | **Version:** v1.2 | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
+
+### 6.1 Package Contents
+
+| File | Description |
+| :--- | :--- |
+| `binary/imx585.ko` | Prebuilt kernel module |
+| `overlays/tegra234-p3767-camera-p3768-imx585-cam0.dtbo` | Device tree overlay for CAM0 |
+| `overlays/tegra234-p3767-camera-p3768-imx585-cam1.dtbo` | Device tree overlay for CAM1 |
+| `overlays/tegra234-p3767-camera-p3768-imx585-dual.dtbo` | Device tree overlay for dual cameras |
+| `isp/camera_overrides.imx585_starter.isp` | Validated starter ISP tuning profile |
+| `install_binary.sh` | One-step installer |
+| `scripts/` | Capture, preview, and diagnostic helper scripts |
+
+### 6.2 Installation
+
+**Step 1: Extract and install**
+
+```bash
+tar -xzf imx585_tegra_binary_720_working_20260601_v1_2.tar.gz
+cd imx585_tegra_binary_720_working_20260601_v1_2
+sudo ./install_binary.sh
+```
+
+The installer will:
+- Install `imx585.ko` and run `depmod -a`
+- Copy all three DTBO files to `/boot`
+- Install the starter ISP profile to `/var/nvidia/nvcam/settings/camera_overrides.isp`
+- Configure module autoload via `/etc/modules-load.d/imx585.conf`
+- Reload the `imx585` kernel module and restart `nvargus-daemon`
+- **No reboot required** after install
+
+**Step 2: Configure CSI overlay**
+
+```bash
+sudo ./scripts/configure_extlinux_overlay.sh
+```
+
+Select the appropriate overlay:
+- `cam0` — single camera on CAM0
+- `cam1` — single camera on CAM1
+- `dual` — cameras on both CAM0 and CAM1
+
+**Step 3: Reboot**
+
+```bash
+sudo reboot
+```
+
+### 6.3 Verification
+
+```bash
+# Check kernel module
+lsmod | grep imx585
+
+# Check video device
+v4l2-ctl --list-devices
+
+# Quick Argus test
+cd scripts && ./check_argus_imx585.sh
+```
+
+Expected output:
+```
+NVIDIA Tegra Video Input Device (platform:tegra-camrtc-ca):
+    /dev/media0
+vi-output, imx585 9-001a (platform:tegra-capture-vi:2):
+    /dev/video0
+```
+
+### 6.4 Usage
+
+**Live Preview:**
+
+```bash
+cd scripts
+
+# Color sensor (1080p / 4K)
+./preview_argus.sh 1080p
+./preview_argus.sh 4k
+
+# Mono sensor (1080p / 4K) — forces grayscale, avoids Argus AWB/CCM pink cast
+./preview_argus_mono.sh 1080p
+./preview_argus_mono.sh 4k
+```
+
+**Capture Images:**
+
+```bash
+# JPEG via Argus
+./capture_argus_image.sh 1080p /tmp/imx585_photo.jpg
+./capture_argus_image.sh 4k /tmp/imx585_4k.jpg
+
+# RAW via V4L2
+./capture_v4l2_image.sh 1080p /tmp/imx585_raw.png
+```
+
+**Record Video:**
+
+```bash
+# 30 seconds at 1080p
+./capture_argus_video.sh 1080p /tmp/imx585_video.mp4 30
+
+# 10 seconds at 4K
+./capture_argus_video.sh 4k /tmp/imx585_4k.mp4 10
+```
+
+**Camera Controls (environment variables):**
+
+```bash
+# Custom exposure (µs, range: 2–39000)
+EXPOSURE=20000 ./preview_argus.sh 1080p
+
+# Custom gain (range: 0–240)
+GAIN=10 ./preview_argus.sh 1080p
+
+# Combine settings
+EXPOSURE=15000 GAIN=5 ./capture_argus_image.sh 1080p /tmp/custom.jpg
+```
+
+### 6.5 Technical Specifications
+
+| Parameter | Value |
+| :--- | :--- |
+| Sensor | Sony IMX585 (Color RGGB Bayer / Mono) |
+| Interface | 2-lane MIPI CSI-2 |
+| Validated data rate | 720 Mbps/lane |
+| Pixel format | RG12 (12-bit Bayer) |
+| 4K resolution | 3856×2180 (sensor) / 3840×2160 (output) |
+| 1080p resolution | 1928×1090 (sensor) / 1920×1080 (output) |
+| Max frame rate (720 Mbps) | 12.5 fps |
+| Max frame rate (1188 Mbps) | 18 fps |
+| Kernel ABI | 5.15.148-tegra (JetPack 5.x / L4T 35.x) |
+
+### 6.6 Troubleshooting
+
+| Symptom | Solution |
+| :--- | :--- |
+| `/dev/video0` missing after reboot | Run `sudo modprobe imx585`; check `sudo dmesg \| grep -i imx585` |
+| Corrupted/garbled preview | Reload: `sudo systemctl stop nvargus-daemon && sudo rmmod imx585 && sudo modprobe imx585 && sudo systemctl start nvargus-daemon` |
+| `Connection refused` from nvargus | Run `sudo systemctl restart nvargus-daemon` |
+| Camera not detected (module loads OK) | Check extlinux.conf: `grep OVERLAYS /boot/extlinux/extlinux.conf`; re-run `configure_extlinux_overlay.sh` and reboot |
+
+---
+
+## 7. Preset OS Image
 
 A pre-configured Raspberry Pi OS image with all drivers and software pre-installed is available for download:
 
@@ -284,6 +434,6 @@ A pre-configured Raspberry Pi OS image with all drivers and software pre-install
 
 ---
 
-## 7. Support
+## 8. Support
 
 For technical support, detailed documentation, and product inquiries, please visit [INNO-MAKER](https://www.inno-maker.com).
