@@ -74,17 +74,18 @@ With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW outp
 
 ## 3. Software Installation
 
-This repository provides the necessary drivers, Image Processing Algorithm (IPA) modules, and an automated installation script to enable full support for the IMX585 sensor on Raspberry Pi.
+This repository provides two driver options for the IMX585 sensor on Raspberry Pi:
 
-### 3.1 Repository Contents
-
-- `precompiler-driver/`: Pre-compiled driver packages for specific OS versions (recommended for quick setup).
-- `pkg1-imx585-driver-6.12y-offline.tar.gz`: Offline driver source build package.
-- `pkg2-rpicam-libcamera-offline.tar.gz`: Offline libcamera build package.
+- **3.1 IMX585 Opensource Driver** — standard open-source driver with R12_CSI2P support, suitable for most users.
+- **3.2 InnoMaker Unique Driver** — InnoMaker's independently released driver with additional ClearHDR 12-bit and 16-bit support.
 
 ---
 
-### 3.2 Option A: Pre-compiled Driver Installation (Recommended)
+### 3.1 IMX585 Opensource Driver
+
+The open-source driver supports standard R12_CSI2P output and is provided in two installation options.
+
+#### Option A: Pre-compiled Driver Installation (Recommended)
 
 > ⚠️ **Important Notice**: Pre-compiled driver packages are built for **specific OS versions and kernel versions**. Before installation, please verify that your system's OS version and kernel version match exactly. If they do not match, use **Option B (source compilation)** instead.
 
@@ -117,15 +118,11 @@ sudo ./install.sh
 
 > 📝 **Note**: More pre-compiled packages for additional OS versions will be added as testing is completed. If your OS version is not listed, please use Option B (source compilation).
 
----
-
-### 3.3 Option B: Offline Driver Compilation (Source)
+#### Option B: Offline Driver Compilation (Source)
 
 > Use this option if your OS/kernel version is not listed in the pre-compiled packages above, or if you require a custom build.
 
-#### Step 1: Offline Driver Compilation
-
-For advanced users who need to compile the driver from source:
+**Step 1: Offline Driver Compilation**
 
 **Package**: `pkg1-imx585-driver-6.12y-offline.tar.gz`
 
@@ -133,7 +130,6 @@ For advanced users who need to compile the driver from source:
 - `imx585-v4l2-driver/` - Kernel driver source code
 - `install.sh` - Automated driver installation script
 
-**Installation**:
 ```bash
 $ tar -xzf pkg1-imx585-driver-6.12y-offline.tar.gz
 $ cd pkg1-imx585-driver
@@ -141,9 +137,7 @@ $ chmod +x install.sh
 $ sudo ./install.sh
 ```
 
-#### Step 2: Offline libcamera & rpicam-apps Compilation
-
-For complete offline compilation of libcamera with IMX585 support and rpicam-apps:
+**Step 2: Offline libcamera & rpicam-apps Compilation**
 
 **Package**: `pkg2-rpicam-libcamera-offline.tar.gz`
 
@@ -152,7 +146,6 @@ For complete offline compilation of libcamera with IMX585 support and rpicam-app
 - `rpicam-apps-imx585/` - rpicam-apps source
 - `build.sh` - Automated build and installation script
 
-**Installation**:
 ```bash
 $ tar -xzf pkg2-rpicam-libcamera-offline.tar.gz
 $ cd pkg2-rpicam-offline
@@ -163,7 +156,93 @@ $ sudo ./build.sh --lite    # Lite mode (minimal dependencies)
 
 **Build Time**: ~30-40 minutes (full mode) or ~15-20 minutes (lite mode)
 
-### 3.4 Manual Configuration (Both Options)
+---
+
+### 3.2 InnoMaker Unique Driver
+
+The InnoMaker Unique Driver is independently developed and released by InnoMaker. It extends the open-source driver with **ClearHDR 12-bit and 16-bit output modes**, which are not available in the standard open-source version.
+
+**Additional features over the open-source driver:**
+
+| Feature | Opensource Driver | InnoMaker Unique Driver |
+| :--- | :---: | :---: |
+| R12_CSI2P (standard 12-bit) | ✅ | ✅ |
+| ClearHDR 12-bit (compressed HDR) | ❌ | ✅ |
+| ClearHDR 16-bit (high bit depth) | ❌ | ✅ |
+
+Driver packages are located in [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/).
+
+#### Supported Versions
+
+| Package | OS | Platform | Kernel |
+| :--- | :--- | :--- | :--- |
+| `imx585_trixie_pi5_k6.12.47+rpt-rpi-2712_20260606-105820.tar.gz` | Raspberry Pi OS Trixie | Pi 5 (2712) | 6.12.47+rpt-rpi-2712 |
+
+> ⚠️ **Important**: This binary package requires an **exact kernel version match**. Check your kernel with `uname -r` before installation. For other kernel versions, please contact InnoMaker support.
+
+#### Installation
+
+```bash
+# Check kernel version
+uname -r
+# Must show: 6.12.47+rpt-rpi-2712
+
+# Extract and install
+tar -xzf innomaker_unique_driver/raspberry_pi/imx585_trixie_pi5_k6.12.47+rpt-rpi-2712_20260606-105820.tar.gz
+cd driver/
+sudo ./install.sh
+```
+
+The install script copies `imx585.ko` to the kernel module path and installs tuning files to `/usr/local/share/libcamera/ipa/rpi/pisp/`.
+
+#### Camera Configuration
+
+Edit `/boot/firmware/config.txt`:
+
+```ini
+# Color camera on CAM0
+dtoverlay=imx585,cam0
+
+# Mono camera on CAM0
+dtoverlay=imx585,cam0,mono
+```
+
+Then reboot:
+```bash
+sudo reboot
+```
+
+#### Enabling ClearHDR
+
+```bash
+# Enable ClearHDR
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=1
+
+# Disable ClearHDR (return to standard mode)
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0
+```
+
+#### Capture Examples
+
+```bash
+# ClearHDR 12-bit (default after enabling WDR)
+rpicam-still -o hdr12.jpg
+
+# ClearHDR 16-bit (requires manual exposure; PiSP does not support 16-bit statistics)
+rpicam-still --mode 3856:2180:16:U --raw \
+  --shutter 20000 --gain 4 --awbgains 1,1 --immediate \
+  -o hdr16.jpg
+
+# Mono camera — specify tuning file
+rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json \
+  -o mono.jpg
+```
+
+For full usage details, see [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/) — the package includes `INSTALL.md` and `USAGE.md`.
+
+---
+
+### 3.3 Manual Configuration (Both Options)
 
 Edit your `/boot/firmware/config.txt` (Pi 5) or `/boot/config.txt` (Pi 4) and add one of the following configurations:
 
