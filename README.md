@@ -52,8 +52,12 @@ With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW outp
 
 | Resolution | Frame Rate | Pixel Format | Notes |
 | :--- | :--- | :--- | :--- |
-| 1928×1090 | 30.00 fps | R12_CSI2P | Cropped from 4K |
-| 3856×2180 | 30.00 fps | R12_CSI2P | Native sensor readout |
+| 1928×1090 | 60.00 fps | R12_CSI2P | 1080p cropped, standard mode |
+| 3856×2180 | 30.00 fps | R12_CSI2P | 4K native, standard mode |
+| 3856×2180 | 30.00 fps | R12_CSI2P | 4K ClearHDR 12-bit — compressed HDR, 4× contrast improvement ¹ |
+| 3856×2180 | 30.00 fps | R16 | 4K ClearHDR 16-bit — higher bit depth, smoother gradation ¹ |
+
+> ¹ **ClearHDR 12-bit and 16-bit modes are only available with the [InnoMaker Unique Driver](innomaker_unique_driver/raspberry_pi/).** The open-source driver supports R12_CSI2P only. ClearHDR is enabled via `v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=1`; 16-bit mode additionally requires `--mode 3856:2180:16:U` and manual exposure (PiSP does not support 16-bit statistics).
 
 ### 2.3 Interface & Physical Specifications
 
