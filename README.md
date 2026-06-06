@@ -164,11 +164,10 @@ The InnoMaker Unique Driver is independently developed and released by InnoMaker
 
 **Additional features over the open-source driver:**
 
-| Feature | Opensource Driver | InnoMaker Unique Driver |
-| :--- | :---: | :---: |
-| R12_CSI2P (standard 12-bit) | ✅ | ✅ |
-| ClearHDR 12-bit (compressed HDR) | ❌ | ✅ |
-| ClearHDR 16-bit (high bit depth) | ❌ | ✅ |
+| Driver | R12_CSI2P (standard 12-bit) | ClearHDR 12-bit (compressed HDR) | ClearHDR 16-bit (high bit depth) |
+| :--- | :---: | :---: | :---: |
+| Opensource Driver | ✅ | ❌ | ❌ |
+| InnoMaker Unique Driver | ✅ | ✅ | ✅ |
 
 Driver packages are located in [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/).
 
