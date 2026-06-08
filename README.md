@@ -19,7 +19,9 @@ With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW outp
 - **Excellent low-light performance** with back-illuminated pixels
 - **On-board EEPROM** (FT24C02A, 256 bytes) for calibration data storage
 - **I2C interface** for EEPROM and sensor register access
-- **Compatible with Raspberry Pi**
+- **4K ClearHDR 12-bit** — compressed HDR output with 4× contrast improvement *(InnoMaker Unique Driver only)*
+- **4K ClearHDR 16-bit** — uncompressed gradation HDR for finest highlight roll-off *(InnoMaker Unique Driver only)*
+- **Compatible with Raspberry Pi and NVIDIA Jetson Orin Nano**
 
 ### 1.2 Industry Applications
 
