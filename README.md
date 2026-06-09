@@ -173,28 +173,37 @@ The InnoMaker Unique Driver is independently developed and released by InnoMaker
 
 Driver packages are located in [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/).
 
+> **Package version**: v1.1.0 (2026-06-09) — `imx585-clearhdr-binary-v1.1.0.tar.gz`
+
 #### Supported Versions
 
-| Package | OS | Platform | Kernel |
+| Package | Platform | Kernel | Notes |
 | :--- | :--- | :--- | :--- |
-| `imx585_trixie_pi5_k6.12.47+rpt-rpi-2712_20260606-105820.tar.gz` | Raspberry Pi OS Trixie | Pi 5 (2712) | 6.12.47+rpt-rpi-2712 |
+| `imx585-clearhdr-binary-v1.1.0.tar.gz` | Raspberry Pi 5 | 6.12.47+rpt-rpi-2712 | Recommended |
 
-> ⚠️ **Important**: This binary package requires an **exact kernel version match**. Check your kernel with `uname -r` before installation. For other kernel versions, please contact InnoMaker support.
+> ⚠️ **Important**: The binary package requires an **exact kernel version match**. Check your kernel with `uname -r` before installation. For other kernel versions, build from source (see USAGE.md inside the package).
 
 #### Installation
 
-```bash
-# Check kernel version
-uname -r
-# Must show: 6.12.47+rpt-rpi-2712
+**Option 1: Binary Package (Recommended)**
 
-# Extract and install
-tar -xzf innomaker_unique_driver/raspberry_pi/imx585_trixie_pi5_k6.12.47+rpt-rpi-2712_20260606-105820.tar.gz
-cd driver/
-sudo ./install.sh
+```bash
+tar -xzf imx585-clearhdr-binary-v1.1.0.tar.gz
+cd imx585-clearhdr-binary-v1.1.0/driver-binary
+chmod +x install.sh
+./install.sh
+sudo reboot
 ```
 
-The install script copies `imx585.ko` to the kernel module path and installs tuning files to `/usr/local/share/libcamera/ipa/rpi/pisp/`.
+**Option 2: Build from Source** (for other kernel versions)
+
+```bash
+sudo apt update && sudo apt install raspberrypi-kernel-headers build-essential
+cd driver-source
+chmod +x build.sh
+./build.sh
+sudo reboot
+```
 
 #### Camera Configuration
 
@@ -213,33 +222,44 @@ Then reboot:
 sudo reboot
 ```
 
-#### Enabling ClearHDR
-
-```bash
-# Enable ClearHDR
-v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=1
-
-# Disable ClearHDR (return to standard mode)
-v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0
-```
-
 #### Capture Examples
 
+v1.1.0 supports the `--hdr` flag for automatic ClearHDR switching — no manual `v4l2-ctl` commands needed.
+
+**Normal SDR (default)**:
 ```bash
-# ClearHDR 12-bit (default after enabling WDR)
-rpicam-still -o hdr12.jpg
+# Color camera
+rpicam-hello -t 0
 
-# ClearHDR 16-bit (requires manual exposure; PiSP does not support 16-bit statistics)
-rpicam-still --mode 3856:2180:16:U --raw \
-  --shutter 20000 --gain 4 --awbgains 1,1 --immediate \
-  -o hdr16.jpg
-
-# Mono camera — specify tuning file
-rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json \
-  -o mono.jpg
+# Mono camera
+rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json
 ```
 
-For full usage details, see [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/) — the package includes `INSTALL.md` and `USAGE.md`.
+**ClearHDR 12-bit (real-time HDR, compressed)**:
+```bash
+# Color camera
+rpicam-still -o hdr12.jpg -t 2000 --hdr
+
+# Mono camera
+rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json \
+  -o hdr12.jpg -t 2000 --hdr
+```
+
+**ClearHDR 16-bit (maximum dynamic range, requires manual exposure)**:
+```bash
+# Color camera
+rpicam-still --mode 3840:2160:SRGGB16 --raw -o raw16.jpg \
+  --shutter 20000 --gain 4 --awbgains 1,1 --immediate --hdr
+
+# Mono camera
+rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json \
+  --mode 3840:2160:SRGGB16 --raw -o raw16.jpg \
+  --shutter 20000 --gain 4 --awbgains 1,1 --immediate --hdr
+```
+
+> **Note**: 16-bit mode requires manual exposure (`--shutter`, `--gain`) as PiSP statistics do not support 16-bit input. The captured `.dng` RAW file can be post-processed with the included `tools/clearhdr_merge.py` for full HCG/LCG merge.
+
+For full usage details, see [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/) — the package includes `README.md` and `USAGE.md`.
 
 ---
 
