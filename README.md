@@ -19,7 +19,9 @@ With native 3840×2160 (4K UHD) resolution and support for 10/12/16-bit RAW outp
 - **Excellent low-light performance** with back-illuminated pixels
 - **On-board EEPROM** (FT24C02A, 256 bytes) for calibration data storage
 - **I2C interface** for EEPROM and sensor register access
-- **Compatible with Raspberry Pi**
+- **4K ClearHDR 12-bit** — compressed HDR output with 4× contrast improvement *(InnoMaker Unique Driver only)*
+- **4K ClearHDR 16-bit** — uncompressed gradation HDR for finest highlight roll-off *(InnoMaker Unique Driver only)*
+- **Compatible with Raspberry Pi and NVIDIA Jetson Orin Nano**
 
 ### 1.2 Industry Applications
 
@@ -359,10 +361,10 @@ rpicam-vid -t 10000 --width 3856 --height 2180 -o 4k_video.h264
 
 ## 6. Jetson Orin Nano
 
-This section covers the prebuilt binary driver package for **Jetson Orin Nano** (JetPack 5.x / L4T 35.x, kernel ABI `5.15.148-tegra`).
+This section covers the prebuilt binary driver package for **Jetson Orin Nano** (L4T R36.4.4, kernel ABI `5.15.148-tegra`). Starting from **v1.4**, the package adds **ClearHDR 12-bit and 16-bit** support in addition to the standard Normal mode.
 
-> **Package:** `jetson-orin-nano-driver/imx585_tegra_binary_720_working_20260601_v1_2.tar.gz`  
-> **Build date:** 2026-06-01 | **Version:** v1.2 | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
+> **Package:** `innomaker_unique_driver/jetson-orin-nano-driver/imx585_tegra_binary_720_working_20260607_v1_4.tar.gz`  
+> **Build date:** 2026-06-07 | **Version:** v1.4 | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
 
 ### 6.1 Package Contents
 
@@ -373,26 +375,41 @@ This section covers the prebuilt binary driver package for **Jetson Orin Nano** 
 | `overlays/tegra234-p3767-camera-p3768-imx585-cam1.dtbo` | Device tree overlay for CAM1 |
 | `overlays/tegra234-p3767-camera-p3768-imx585-dual.dtbo` | Device tree overlay for dual cameras |
 | `isp/camera_overrides.imx585_starter.isp` | Validated starter ISP tuning profile |
-| `install_binary.sh` | One-step installer |
+| `install_binary.sh` | One-step installer (also installs `imx585-reload.service`) |
+| `imx585-reload.service` | Boot initialization service (loads Normal mode at boot) |
+| `scripts/switch_mode.sh` | One-command mode switcher (Normal / HDR12 / HDR16) |
+| `scripts/preview_argus_hdr.sh` | Live preview with ClearHDR mode |
 | `scripts/` | Capture, preview, and diagnostic helper scripts |
 
-### 6.2 Installation
+### 6.2 Operating Modes
+
+The v1.4 driver supports three operating modes. **Normal mode is the default after installation.**
+
+| Mode | `hdr_mode` | `hdr_bit_depth` | Output | Argus 4K | Argus 1080p | V4L2 RAW | Default |
+| :--- | :---: | :---: | :--- | :---: | :---: | :---: | :---: |
+| **Normal** | 0 | — | RAW12 linear | ✅ | ✅ | ✅ | ⭐ Yes |
+| ClearHDR 12-bit | 1 | 12 | RAW12 compressed HDR | ✅ (locked exp.) | ❌ | ⚠️ | ❌ |
+| ClearHDR 16-bit | 1 | 16 | RG12, uncompressed gradation HDR | ✅ (locked exp.) | ❌ | ⚠️ | ❌ |
+
+> **Note:** ClearHDR modes are opt-in. Argus AE misreads HDR luminance and drives exposure to all-black without a locked exposure — capture/preview scripts auto-pin `exposuretimerange` and `gainrange`. Use 4K resolution for HDR; binned 1080p HDR is currently unusable.
+
+### 6.3 Installation
 
 **Step 1: Extract and install**
 
 ```bash
-tar -xzf imx585_tegra_binary_720_working_20260601_v1_2.tar.gz
-cd imx585_tegra_binary_720_working_20260601_v1_2
+tar -xzf imx585_tegra_binary_720_working_20260607_v1_4.tar.gz
+cd imx585_tegra_binary_720_working_20260607_v1_4
 sudo ./install_binary.sh
 ```
 
 The installer will:
-- Install `imx585.ko` and run `depmod -a`
+- Install `imx585.ko` to `/lib/modules/5.15.148-tegra/`
 - Copy all three DTBO files to `/boot`
 - Install the starter ISP profile to `/var/nvidia/nvcam/settings/camera_overrides.isp`
-- Configure module autoload via `/etc/modules-load.d/imx585.conf`
-- Reload the `imx585` kernel module and restart `nvargus-daemon`
-- **No reboot required** after install
+- Configure module autoload
+- **Install and enable `imx585-reload.service`** (loads Normal mode at every boot)
+- Restart `nvargus-daemon`
 
 **Step 2: Configure CSI overlay**
 
@@ -402,7 +419,7 @@ sudo ./scripts/configure_extlinux_overlay.sh
 
 Select the appropriate overlay:
 - `cam0` — single camera on CAM0
-- `cam1` — single camera on CAM1
+- `cam1` — single camera on CAM1 (recommended)
 - `dual` — cameras on both CAM0 and CAM1
 
 **Step 3: Reboot**
@@ -411,7 +428,7 @@ Select the appropriate overlay:
 sudo reboot
 ```
 
-### 6.3 Verification
+### 6.4 Verification
 
 ```bash
 # Check kernel module
@@ -422,9 +439,13 @@ v4l2-ctl --list-devices
 
 # Quick Argus test
 cd scripts && ./check_argus_imx585.sh
+
+# Check current mode
+./scripts/switch_mode.sh status
+# Expected: Current mode: Normal (hdr_mode=0)
 ```
 
-Expected output:
+Expected output from `v4l2-ctl --list-devices`:
 ```
 NVIDIA Tegra Video Input Device (platform:tegra-camrtc-ca):
     /dev/media0
@@ -432,30 +453,51 @@ vi-output, imx585 9-001a (platform:tegra-capture-vi:2):
     /dev/video0
 ```
 
-### 6.4 Usage
+### 6.5 Usage
+
+**Switching Modes:**
+
+Use `switch_mode.sh` to switch cleanly between modes (stops Argus → unloads driver → reloads with new params → restarts Argus):
+
+```bash
+./scripts/switch_mode.sh status          # Show current mode
+sudo ./scripts/switch_mode.sh normal     # Normal RAW12 (default)
+sudo ./scripts/switch_mode.sh hdr12      # ClearHDR 12-bit
+sudo ./scripts/switch_mode.sh hdr16      # ClearHDR 16-bit
+```
 
 **Live Preview:**
 
 ```bash
 cd scripts
 
-# Color sensor (1080p / 4K)
+# Normal mode — color sensor
 ./preview_argus.sh 1080p
 ./preview_argus.sh 4k
 
-# Mono sensor (1080p / 4K) — forces grayscale, avoids Argus AWB/CCM pink cast
+# Normal mode — Mono sensor (forces grayscale, avoids Argus AWB/CCM pink cast)
 ./preview_argus_mono.sh 1080p
 ./preview_argus_mono.sh 4k
+
+# ClearHDR preview (auto-pins locked exposure)
+./preview_argus_hdr.sh 4k
 ```
 
 **Capture Images:**
 
 ```bash
-# JPEG via Argus
+# Normal mode — JPEG via Argus
 ./capture_argus_image.sh 1080p /tmp/imx585_photo.jpg
 ./capture_argus_image.sh 4k /tmp/imx585_4k.jpg
 
-# RAW via V4L2
+# ClearHDR mode — switch first, then capture at 4K
+sudo ./switch_mode.sh hdr12
+./capture_argus_image.sh 4k /tmp/hdr12.jpg
+
+# Override locked exposure if needed
+EXPOSURE_NS=20000000 GAIN=10 ./capture_argus_image.sh 4k /tmp/hdr_custom.jpg
+
+# RAW via V4L2 (Normal mode only)
 ./capture_v4l2_image.sh 1080p /tmp/imx585_raw.png
 ```
 
@@ -482,7 +524,26 @@ GAIN=10 ./preview_argus.sh 1080p
 EXPOSURE=15000 GAIN=5 ./capture_argus_image.sh 1080p /tmp/custom.jpg
 ```
 
-### 6.5 Technical Specifications
+**Make ClearHDR the boot default (optional):**
+
+```bash
+sudo systemctl edit imx585-reload.service
+```
+
+Add the following (for ClearHDR 12-bit):
+```ini
+[Service]
+ExecStart=
+ExecStart=/sbin/modprobe imx585 hdr_mode=1 hdr_bit_depth=12
+```
+
+To revert to Normal default:
+```bash
+sudo systemctl revert imx585-reload.service
+sudo systemctl daemon-reload
+```
+
+### 6.6 Technical Specifications
 
 | Parameter | Value |
 | :--- | :--- |
@@ -494,9 +555,10 @@ EXPOSURE=15000 GAIN=5 ./capture_argus_image.sh 1080p /tmp/custom.jpg
 | 1080p resolution | 1928×1090 (sensor) / 1920×1080 (output) |
 | Max frame rate (720 Mbps) | 12.5 fps |
 | Max frame rate (1188 Mbps) | 18 fps |
-| Kernel ABI | 5.15.148-tegra (JetPack 5.x / L4T 35.x) |
+| Kernel ABI | 5.15.148-tegra (L4T R36.4.4) |
+| ClearHDR modes | 12-bit (compressed HDR) / 16-bit (uncompressed gradation HDR) |
 
-### 6.6 Troubleshooting
+### 6.7 Troubleshooting
 
 | Symptom | Solution |
 | :--- | :--- |
@@ -504,6 +566,8 @@ EXPOSURE=15000 GAIN=5 ./capture_argus_image.sh 1080p /tmp/custom.jpg
 | Corrupted/garbled preview | Reload: `sudo systemctl stop nvargus-daemon && sudo rmmod imx585 && sudo modprobe imx585 && sudo systemctl start nvargus-daemon` |
 | `Connection refused` from nvargus | Run `sudo systemctl restart nvargus-daemon` |
 | Camera not detected (module loads OK) | Check extlinux.conf: `grep OVERLAYS /boot/extlinux/extlinux.conf`; re-run `configure_extlinux_overlay.sh` and reboot |
+| ClearHDR image all-black | Argus AE issue — use `switch_mode.sh hdr12` then capture with locked exposure via `capture_argus_image.sh 4k` |
+| HDR at 1080p all-black | Known limitation in v1.4 — use 4K resolution for ClearHDR modes |
 
 ---
 
