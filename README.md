@@ -195,16 +195,6 @@ chmod +x install.sh
 sudo reboot
 ```
 
-**Option 2: Build from Source** (for other kernel versions)
-
-```bash
-sudo apt update && sudo apt install raspberrypi-kernel-headers build-essential
-cd driver-source
-chmod +x build.sh
-./build.sh
-sudo reboot
-```
-
 #### Camera Configuration
 
 Edit `/boot/firmware/config.txt`:
