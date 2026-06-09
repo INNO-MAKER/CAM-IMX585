@@ -373,10 +373,10 @@ rpicam-vid -t 10000 --width 3856 --height 2180 -o 4k_video.h264
 
 ## 6. Jetson Orin Nano
 
-This section covers the prebuilt binary driver package for **Jetson Orin Nano** (L4T R36.4.4, kernel ABI `5.15.148-tegra`). Starting from **v1.4**, the package adds **ClearHDR 12-bit and 16-bit** support in addition to the standard Normal mode.
+This section covers the prebuilt binary driver package for **Jetson Orin Nano** (L4T R36.4.4, kernel ABI `5.15.148-tegra`). The package supports **Normal mode (default)** plus **ClearHDR 12-bit and 16-bit (opt-in)**.
 
-> **Package:** `innomaker_unique_driver/jetson-orin-nano-driver/imx585_tegra_binary_720_working_20260607_v1_4.tar.gz`  
-> **Build date:** 2026-06-07 | **Version:** v1.4 | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
+> **Package:** `innomaker_unique_driver/jetson-orin-nano-driver/imx585_tegra_binary_720_working_20260609_v1_5.tar.gz`  
+> **Build date:** 2026-06-09 | **Version:** v1.5 (stable) | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
 
 ### 6.1 Package Contents
 
@@ -390,12 +390,20 @@ This section covers the prebuilt binary driver package for **Jetson Orin Nano** 
 | `install_binary.sh` | One-step installer (also installs `imx585-reload.service`) |
 | `imx585-reload.service` | Boot initialization service (loads Normal mode at boot) |
 | `scripts/switch_mode.sh` | One-command mode switcher (Normal / HDR12 / HDR16) |
-| `scripts/preview_argus_hdr.sh` | Live preview with ClearHDR mode |
-| `scripts/` | Capture, preview, and diagnostic helper scripts |
+| `scripts/preview_argus.sh` | Live preview — color sensor |
+| `scripts/preview_argus_mono.sh` | Live preview — Mono sensor (grayscale pipeline) |
+| `scripts/preview_argus_hdr.sh` | Live ClearHDR preview — color sensor |
+| `scripts/preview_argus_mono_hdr.sh` | Live ClearHDR preview — Mono sensor (locked AE + GRAY8) ⭐ New in v1.5 |
+| `scripts/capture_argus_image.sh` | Capture JPEG image via Argus |
+| `scripts/capture_argus_video.sh` | Record video via Argus |
+| `scripts/capture_v4l2_image.sh` | Capture RAW image via V4L2 |
+| `scripts/capture_mono_image.sh` | Capture RAW image for Mono sensor |
+| `scripts/imx585_raw16_to_pnm.py` | RAW16 to PNM conversion tool (required by capture scripts) |
+| `develop/` | Diagnostic helpers — not for end users |
 
 ### 6.2 Operating Modes
 
-The v1.4 driver supports three operating modes. **Normal mode is the default after installation.**
+The v1.5 driver supports three operating modes. **Normal mode is the default after installation.**
 
 | Mode | `hdr_mode` | `hdr_bit_depth` | Output | Argus 4K | Argus 1080p | V4L2 RAW | Default |
 | :--- | :---: | :---: | :--- | :---: | :---: | :---: | :---: |
@@ -410,8 +418,8 @@ The v1.4 driver supports three operating modes. **Normal mode is the default aft
 **Step 1: Extract and install**
 
 ```bash
-tar -xzf imx585_tegra_binary_720_working_20260607_v1_4.tar.gz
-cd imx585_tegra_binary_720_working_20260607_v1_4
+tar -xzf imx585_tegra_binary_720_working_20260609_v1_5.tar.gz
+cd imx585_tegra_binary_720_working_20260609_v1_5
 sudo ./install_binary.sh
 ```
 
@@ -491,8 +499,11 @@ cd scripts
 ./preview_argus_mono.sh 1080p
 ./preview_argus_mono.sh 4k
 
-# ClearHDR preview (auto-pins locked exposure)
+# ClearHDR preview — color sensor (auto-pins locked exposure)
 ./preview_argus_hdr.sh 4k
+
+# ClearHDR preview — Mono sensor (locked AE + GRAY8 round-trip) ⭐ New in v1.5
+./preview_argus_mono_hdr.sh 4k
 ```
 
 **Capture Images:**
@@ -579,7 +590,9 @@ sudo systemctl daemon-reload
 | `Connection refused` from nvargus | Run `sudo systemctl restart nvargus-daemon` |
 | Camera not detected (module loads OK) | Check extlinux.conf: `grep OVERLAYS /boot/extlinux/extlinux.conf`; re-run `configure_extlinux_overlay.sh` and reboot |
 | ClearHDR image all-black | Argus AE issue — use `switch_mode.sh hdr12` then capture with locked exposure via `capture_argus_image.sh 4k` |
-| HDR at 1080p all-black | Known limitation in v1.4 — use 4K resolution for ClearHDR modes |
+| HDR at 1080p all-black | Known limitation — use 4K resolution for ClearHDR modes |
+| Mono ClearHDR has colour cast or pink tint | Use `preview_argus_mono_hdr.sh` instead of `preview_argus_hdr.sh`; it applies GRAY8 round-trip to neutralize Argus AWB/CCM |
+| `capture_mono_image.sh` or `capture_v4l2_image.sh` fails | Ensure `scripts/imx585_raw16_to_pnm.py` is present (bundled since v1.5) |
 
 ---
 
