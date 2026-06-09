@@ -421,44 +421,98 @@ Then reboot:
 sudo reboot
 ```
 
-##### Capture Examples
+##### HDR Usage
 
-v1.1.0 supports the `--hdr` flag for automatic ClearHDR switching — no manual `v4l2-ctl` commands needed.
+ClearHDR mode is controlled via `v4l2-ctl` before launching rpicam. The sensor subdevice is typically `/dev/v4l-subdev2` (verify with `v4l2-ctl --list-devices`).
 
-**Normal SDR (default)**:
+**Mode 1: Normal SDR (default)**
+
+Standard 12-bit single gain mode, best for well-lit scenes.
+
 ```bash
-# Color camera
-rpicam-hello -t 0
+# Ensure ClearHDR is off (default after boot)
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0
 
-# Mono camera
+# Preview — Mono camera
 rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json
+
+# Preview — Color camera
+rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585.json
 ```
 
-**ClearHDR 12-bit (real-time HDR, compressed)**:
+**Mode 2: ClearHDR 12-bit (real-time HDR)**
+
+Sensor-internal HCG/LCG fusion with gradation compression. Supports real-time preview, still capture, and video recording.
+
 ```bash
-# Color camera
-rpicam-still -o hdr12.jpg -t 2000 --hdr
+# Enable ClearHDR
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=1
 
-# Mono camera
-rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json \
-  -o hdr12.jpg -t 2000 --hdr
+# Preview — Mono camera (use _hdr tuning file with --hdr flag)
+rpicam-hello -t 0 --hdr --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono_hdr.json
+
+# Preview — Color camera
+rpicam-hello -t 0 --hdr --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_hdr.json
+
+# Still capture — Mono camera
+rpicam-still --hdr --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono_hdr.json \
+  -o hdr12.jpg -t 2000
+
+# Video recording — Mono camera
+rpicam-vid --hdr --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono_hdr.json \
+  -o hdr_video.h264 -t 10000
 ```
 
-**ClearHDR 16-bit (maximum dynamic range, requires manual exposure)**:
+> **Note**: Always use `--hdr` together with the `_hdr.json` tuning file for ClearHDR 12-bit. Without `--hdr`, the ISP does not apply HDR tone mapping and the image will appear flat/washed out.
+
+**Mode 3: ClearHDR 16-bit (maximum dynamic range)**
+
+Full 16-bit linear HDR output. Requires manual exposure and post-processing merge.
+
 ```bash
-# Color camera
-rpicam-still --mode 3840:2160:SRGGB16 --raw -o raw16.jpg \
-  --shutter 20000 --gain 4 --awbgains 1,1 --immediate --hdr
+# Enable ClearHDR
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=1
 
-# Mono camera
+# Force sensor to 16-bit output — Mono camera
+media-ctl -d /dev/media0 --set-v4l2 '"imx585 10-001a":0[fmt:Y16_1X16/3856x2180]'
+
+# Capture 16-bit RAW (manual exposure required)
 rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json \
-  --mode 3840:2160:SRGGB16 --raw -o raw16.jpg \
-  --shutter 20000 --gain 4 --awbgains 1,1 --immediate --hdr
+  --raw -o raw16.jpg --shutter 20000 --gain 4 --awbgains 1,1 --immediate
 ```
 
-> **Note**: 16-bit mode requires manual exposure (`--shutter`, `--gain`) as PiSP statistics do not support 16-bit input. The captured `.dng` RAW file can be post-processed with the included `tools/clearhdr_merge.py` for full HCG/LCG merge.
+For color cameras, replace `Y16_1X16` with `SRGGB16_1X16` and use `imx585.json`.
 
-> The `--hdr` flag triggers automatic mode switching in the driver. To return to Normal SDR, simply omit the `--hdr` flag.
+> **Note**: 16-bit mode requires manual exposure (`--shutter`, `--gain`) as PiSP statistics do not support 16-bit data.
+
+**Return to Normal SDR:**
+
+```bash
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0
+```
+
+> ClearHDR mode persists until changed or reboot. Normal SDR is restored automatically after reboot.
+
+##### Tuning Files
+
+| File | Usage |
+| :--- | :--- |
+| `imx585.json` | Color camera, Normal SDR |
+| `imx585_mono.json` | Mono camera, Normal SDR |
+| `imx585_hdr.json` | Color camera, ClearHDR 12-bit |
+| `imx585_mono_hdr.json` | Mono camera, ClearHDR 12-bit |
+
+##### 16-bit Merge Tool
+
+Process 16-bit RAW DNG files captured in Mode 3 using the included `tools/clearhdr_merge.py`:
+
+```bash
+# Auto-detect gain ratio
+python3 clearhdr_merge.py raw16.dng -o merged.tiff
+
+# Generate 8-bit preview
+python3 clearhdr_merge.py raw16.dng -o merged.tiff --preview
+```
 
 For full usage details, see [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/) — the package includes `README.md` and `USAGE.md`.
 
