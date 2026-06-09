@@ -259,6 +259,8 @@ rpicam-still --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.j
 
 > **Note**: 16-bit mode requires manual exposure (`--shutter`, `--gain`) as PiSP statistics do not support 16-bit input. The captured `.dng` RAW file can be post-processed with the included `tools/clearhdr_merge.py` for full HCG/LCG merge.
 
+> The `--hdr` flag triggers automatic mode switching in the driver. To return to Normal SDR, simply omit the `--hdr` flag.
+
 For full usage details, see [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/) — the package includes `README.md` and `USAGE.md`.
 
 ---
