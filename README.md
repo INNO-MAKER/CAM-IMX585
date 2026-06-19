@@ -177,10 +177,18 @@ Driver packages are located in [`innomaker_unique_driver/`](innomaker_unique_dri
 
 #### 3.2.1 Jetson Orin Nano
 
-Prebuilt binary driver for **Jetson Orin Nano** (L4T R36.4.4, kernel ABI `5.15.148-tegra`). Supports **Normal mode (default)** plus **ClearHDR 12-bit and 16-bit (opt-in)**.
+Prebuilt binary driver for **Jetson Orin Nano** (L4T R36.4.4). Supports **Normal mode (default)** plus **ClearHDR 12-bit and 16-bit (opt-in)**.
 
-> **Package:** `innomaker_unique_driver/jetson-orin-nano-driver/imx585_tegra_binary_720_working_20260609_v1_5.tar.gz`  
-> **Build date:** 2026-06-09 | **Version:** v1.5 (stable) | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
+> **Version:** v1.5.2 (stable) | **Build date:** 2026-06-17 | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
+
+Two packages are provided — choose the one matching your kernel version:
+
+| Package | Kernel | Path |
+| :--- | :--- | :--- |
+| `imx585_tegra_binary_720_working_5.15.148_20260617_v1_5_2.tar.gz` | `5.15.148-tegra` (L4T R36.4.4) | `innomaker_unique_driver/jetson-orin-nano-driver/5.15.148/` |
+| `imx585_tegra_binary_720_working_5.15.185_20260617_v1_5_2.tar.gz` | `5.15.185-tegra` | `innomaker_unique_driver/jetson-orin-nano-driver/5.15.185/` |
+
+Check your kernel version with `uname -r` before selecting a package.
 
 ##### Package Contents
 
@@ -207,7 +215,7 @@ Prebuilt binary driver for **Jetson Orin Nano** (L4T R36.4.4, kernel ABI `5.15.1
 
 ##### Operating Modes
 
-The v1.5 driver supports three operating modes. **Normal mode is the default after installation.**
+The v1.5.2 driver supports three operating modes. **Normal mode is the default after installation.**
 
 | Mode | `hdr_mode` | `hdr_bit_depth` | Output | Argus 4K | Argus 1080p | V4L2 RAW | Default |
 | :--- | :---: | :---: | :--- | :---: | :---: | :---: | :---: |
@@ -222,13 +230,14 @@ The v1.5 driver supports three operating modes. **Normal mode is the default aft
 **Step 1: Extract and install**
 
 ```bash
-tar -xzf imx585_tegra_binary_720_working_20260609_v1_5.tar.gz
-cd imx585_tegra_binary_720_working_20260609_v1_5
+# Example for kernel 5.15.148-tegra:
+tar -xzf imx585_tegra_binary_720_working_5.15.148_20260617_v1_5_2.tar.gz
+cd imx585_tegra_binary_720_working_5.15.148_20260617_v1_5_2
 sudo ./install_binary.sh
 ```
 
 The installer will:
-- Install `imx585.ko` to `/lib/modules/5.15.148-tegra/`
+- Install `imx585.ko` to `/lib/modules/<kernel-version>/`
 - Copy all three DTBO files to `/boot`
 - Install the starter ISP profile to `/var/nvidia/nvcam/settings/camera_overrides.isp`
 - Configure module autoload
@@ -361,7 +370,7 @@ sudo systemctl daemon-reload
 | 1080p resolution | 1928×1090 (sensor) / 1920×1080 (output) |
 | Max frame rate (720 Mbps) | 12.5 fps |
 | Max frame rate (1188 Mbps) | 18 fps |
-| Kernel ABI | 5.15.148-tegra (L4T R36.4.4) |
+| Kernel ABI | 5.15.148-tegra (L4T R36.4.4) / 5.15.185-tegra |
 | ClearHDR modes | 12-bit (compressed HDR) / 16-bit (uncompressed gradation HDR) |
 
 ##### Troubleshooting
