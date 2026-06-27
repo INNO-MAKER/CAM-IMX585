@@ -177,16 +177,16 @@ Driver packages are located in [`innomaker_unique_driver/`](innomaker_unique_dri
 
 #### 3.2.1 Jetson Orin Nano
 
-Prebuilt binary driver for **Jetson Orin Nano** (L4T R36.4.4). Supports **Normal mode (default)** plus **ClearHDR 12-bit and 16-bit (opt-in)**.
+Prebuilt binary driver for **Jetson Orin Nano** (L4T R36.4.4). Supports **Normal**, **HCG**, and **ClearHDR 12-bit / 16-bit** modes.
 
-> **Version:** v1.5.2 (stable) | **Build date:** 2026-06-17 | **Validated link speed:** 720 Mbps/lane (2-lane MIPI CSI-2)
+> **Version:** v2.0 (stable) | **Build date:** 2026-06-27 | **Validated link speed:** 1188 Mbps/lane (2-lane MIPI CSI-2)
 
 Two packages are provided — choose the one matching your kernel version:
 
 | Package | Kernel | Path |
 | :--- | :--- | :--- |
-| `imx585_tegra_binary_720_working_5.15.148_20260617_v1_5_2.tar.gz` | `5.15.148-tegra` (L4T R36.4.4) | `innomaker_unique_driver/jetson-orin-nano-driver/5.15.148/` |
-| `imx585_tegra_binary_720_working_5.15.185_20260617_v1_5_2.tar.gz` | `5.15.185-tegra` | `innomaker_unique_driver/jetson-orin-nano-driver/5.15.185/` |
+| `imx585_tegra_binary_1188_working_5.15.148_20260627_v2_0.tar.gz` | `5.15.148-tegra` (L4T R36.4.4) | `innomaker_unique_driver/jetson-orin-nano-driver/5.15.148/` |
+| `imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz` | `5.15.185-tegra` | `innomaker_unique_driver/jetson-orin-nano-driver/5.15.185/` |
 
 Check your kernel version with `uname -r` before selecting a package.
 
@@ -195,17 +195,18 @@ Check your kernel version with `uname -r` before selecting a package.
 | File | Description |
 | :--- | :--- |
 | `binary/imx585.ko` | Prebuilt kernel module |
-| `overlays/tegra234-p3767-camera-p3768-imx585-cam0.dtbo` | Device tree overlay for CAM0 |
+| `overlays/tegra234-p3767-camera-p3768-imx585-cam0.dtbo` | Device tree overlay for CAM0 ⭐ New in v2.0 |
 | `overlays/tegra234-p3767-camera-p3768-imx585-cam1.dtbo` | Device tree overlay for CAM1 |
-| `overlays/tegra234-p3767-camera-p3768-imx585-dual.dtbo` | Device tree overlay for dual cameras |
+| `overlays/tegra234-p3767-camera-p3768-imx585-dual.dtbo` | Device tree overlay for dual CAM0+CAM1 ⭐ New in v2.0 |
 | `isp/camera_overrides.imx585_starter.isp` | Validated starter ISP tuning profile |
 | `install_binary.sh` | One-step installer (also installs `imx585-reload.service`) |
 | `imx585-reload.service` | Boot initialization service (loads Normal mode at boot) |
-| `scripts/switch_mode.sh` | One-command mode switcher (Normal / HDR12 / HDR16) |
+| `scripts/switch_mode.sh` | One-command mode switcher (Normal / HCG / HDR12 / HDR16) |
 | `scripts/preview_argus.sh` | Live preview — color sensor |
-| `scripts/preview_argus_mono.sh` | Live preview — Mono sensor (grayscale pipeline) |
+| `scripts/preview_argus_mono.sh` | Live preview — Mono sensor (Argus ISP, recommended for clean image) |
+| `scripts/preview_mono.sh` | Live preview — Mono sensor via V4L2 full-res (4K, auto-restores on exit) |
 | `scripts/preview_argus_hdr.sh` | Live ClearHDR preview — color sensor |
-| `scripts/preview_argus_mono_hdr.sh` | Live ClearHDR preview — Mono sensor (locked AE + GRAY8) ⭐ New in v1.5 |
+| `scripts/preview_argus_mono_hdr.sh` | Live ClearHDR preview — Mono sensor (locked AE + GRAY8) |
 | `scripts/capture_argus_image.sh` | Capture JPEG image via Argus |
 | `scripts/capture_argus_video.sh` | Record video via Argus |
 | `scripts/capture_v4l2_image.sh` | Capture RAW image via V4L2 |
@@ -215,15 +216,16 @@ Check your kernel version with `uname -r` before selecting a package.
 
 ##### Operating Modes
 
-The v1.5.2 driver supports three operating modes. **Normal mode is the default after installation.**
+The v2.0 driver supports four operating modes. **Normal mode is the default after installation.**
 
-| Mode | `hdr_mode` | `hdr_bit_depth` | Output | Argus 4K | Argus 1080p | V4L2 RAW | Default |
-| :--- | :---: | :---: | :--- | :---: | :---: | :---: | :---: |
-| **Normal** | 0 | — | RAW12 linear | ✅ | ✅ | ✅ | ⭐ Yes |
-| ClearHDR 12-bit | 1 | 12 | RAW12 compressed HDR | ✅ (locked exp.) | ❌ | ⚠️ | ❌ |
-| ClearHDR 16-bit | 1 | 16 | RG12, uncompressed gradation HDR | ✅ (locked exp.) | ❌ | ⚠️ | ❌ |
+| Mode | Switch Command | Output | Argus 4K | Argus 1080p | V4L2 RAW | Default |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+| **Normal (LCG)** | `switch_mode.sh normal` | RAW12 linear | ✅ | ✅ | ✅ | ⭐ Yes |
+| **HCG** | `switch_mode.sh hcg` | RAW12 linear (high conversion gain) | ✅ | ✅ | ✅ | ❌ |
+| ClearHDR 12-bit | `switch_mode.sh hdr12` | RAW12 compressed HDR | ✅ (locked exp.) | ❌ | ⚠️ | ❌ |
+| ClearHDR 16-bit | `switch_mode.sh hdr16` | RG12 uncompressed gradation HDR | ✅ (locked exp.) | ❌ | ⚠️ | ❌ |
 
-> **Note:** ClearHDR modes are opt-in. Argus AE misreads HDR luminance and drives exposure to all-black without a locked exposure — capture/preview scripts auto-pin `exposuretimerange` and `gainrange`. Use 4K resolution for HDR; binned 1080p HDR is currently unusable.
+> **Note:** HCG mode provides low-noise / low-light performance with linear output. ClearHDR modes are opt-in — Argus AE misreads HDR luminance and drives exposure to all-black without locked exposure; capture/preview scripts auto-pin `exposuretimerange` and `gainrange`. Use 4K for HDR; binned 1080p HDR is currently unusable.
 
 ##### Installation
 
@@ -231,29 +233,34 @@ The v1.5.2 driver supports three operating modes. **Normal mode is the default a
 
 ```bash
 # Example for kernel 5.15.148-tegra:
-tar -xzf imx585_tegra_binary_720_working_5.15.148_20260617_v1_5_2.tar.gz
-cd imx585_tegra_binary_720_working_5.15.148_20260617_v1_5_2
+tar -xzf imx585_tegra_binary_1188_working_5.15.148_20260627_v2_0.tar.gz
+cd imx585_tegra_binary_1188_working_5.15.148_20260627_v2_0
 sudo ./install_binary.sh
 ```
 
 The installer will:
 - Install `imx585.ko` to `/lib/modules/<kernel-version>/`
-- Copy all three DTBO files to `/boot`
+- Copy all three DTBO files to `/boot` and auto-stamp each overlay's CSI header name
 - Install the starter ISP profile to `/var/nvidia/nvcam/settings/camera_overrides.isp`
 - Configure module autoload
 - **Install and enable `imx585-reload.service`** (loads Normal mode at every boot)
 - Restart `nvargus-daemon`
 
+> The installer **never edits `/boot/extlinux/extlinux.conf`** directly.
+
 **Step 2: Configure CSI overlay**
 
+Activate one overlay with NVIDIA jetson-io:
+
 ```bash
-sudo ./scripts/configure_extlinux_overlay.sh
+sudo python3 /opt/nvidia/jetson-io/config-by-hardware.py -l
+sudo python3 /opt/nvidia/jetson-io/config-by-hardware.py -n '2=Camera IMX585 CAM0'
 ```
 
-Select the appropriate overlay:
-- `cam0` — single camera on CAM0
-- `cam1` — single camera on CAM1 (recommended)
-- `dual` — cameras on both CAM0 and CAM1
+Available overlays:
+- `Camera IMX585 CAM0` — single camera on CAM0 (recommended)
+- `Camera IMX585 CAM1` — single camera on CAM1
+- `Dual Camera IMX585 CAM0 CAM1` — dual cameras
 
 **Step 3: Reboot**
 
@@ -289,7 +296,8 @@ vi-output, imx585 9-001a (platform:tegra-capture-vi:2):
 
 ```bash
 ./scripts/switch_mode.sh status          # Show current mode
-sudo ./scripts/switch_mode.sh normal     # Normal RAW12 (default)
+sudo ./scripts/switch_mode.sh normal     # Normal RAW12 linear LCG (default)
+sudo ./scripts/switch_mode.sh hcg        # HCG linear (low-noise / low-light)
 sudo ./scripts/switch_mode.sh hdr12      # ClearHDR 12-bit
 sudo ./scripts/switch_mode.sh hdr16      # ClearHDR 16-bit
 ```
@@ -303,14 +311,17 @@ cd scripts
 ./preview_argus.sh 1080p
 ./preview_argus.sh 4k
 
-# Normal mode — Mono sensor
+# Normal mode — Mono sensor (Argus ISP, recommended for clean image)
 ./preview_argus_mono.sh 1080p
 ./preview_argus_mono.sh 4k
+
+# Normal mode — Mono sensor via V4L2 full-res (sharper, but shows sensor row FPN)
+DISPLAY=:0 ./preview_mono.sh 4k
 
 # ClearHDR preview — color sensor (auto-pins locked exposure)
 ./preview_argus_hdr.sh 4k
 
-# ClearHDR preview — Mono sensor (locked AE + GRAY8 round-trip) ⭐ New in v1.5
+# ClearHDR preview — Mono sensor (locked AE + GRAY8 round-trip)
 ./preview_argus_mono_hdr.sh 4k
 ```
 
@@ -364,14 +375,14 @@ sudo systemctl daemon-reload
 | :--- | :--- |
 | Sensor | Sony IMX585 (Color RGGB Bayer / Mono) |
 | Interface | 2-lane MIPI CSI-2 |
-| Validated data rate | 720 Mbps/lane |
+| Validated data rate | 1188 Mbps/lane |
 | Pixel format | RG12 (12-bit Bayer) |
 | 4K resolution | 3856×2180 (sensor) / 3840×2160 (output) |
 | 1080p resolution | 1928×1090 (sensor) / 1920×1080 (output) |
-| Max frame rate (720 Mbps) | 12.5 fps |
-| Max frame rate (1188 Mbps) | 18 fps |
+| Max frame rate @ 4K | 20 fps (single camera, 2-lane @ 1188 Mbps) |
+| Max frame rate @ 1080p | 40 fps (2×2 binned) |
 | Kernel ABI | 5.15.148-tegra (L4T R36.4.4) / 5.15.185-tegra |
-| ClearHDR modes | 12-bit (compressed HDR) / 16-bit (uncompressed gradation HDR) |
+| Operating modes | Normal (LCG) / HCG / ClearHDR 12-bit / ClearHDR 16-bit |
 
 ##### Troubleshooting
 
@@ -392,26 +403,28 @@ sudo systemctl daemon-reload
 
 Prebuilt binary driver for **Raspberry Pi 5** with ClearHDR support.
 
-> **Package version**: v1.1.0 (2026-06-09) — `imx585-clearhdr-binary-v1.1.0.tar.gz`  
+> **Package version**: v1.2.0 (2026-06-27) — `imx585-clearhdr-binary-v1.2.0.tar.gz`  
 > Driver packages are located in [`innomaker_unique_driver/raspberry_pi/`](innomaker_unique_driver/raspberry_pi/).
 
 ##### Supported Versions
 
 | Package | Platform | Kernel | Notes |
 | :--- | :--- | :--- | :--- |
-| `imx585-clearhdr-binary-v1.1.0.tar.gz` | Raspberry Pi 5 | 6.12.47+rpt-rpi-2712 | Recommended |
+| `imx585-clearhdr-binary-v1.2.0.tar.gz` | Raspberry Pi 5 | 6.12.47+rpt-rpi-2712 | Recommended |
 
 > ⚠️ **Important**: The binary package requires an **exact kernel version match**. Check your kernel with `uname -r` before installation.
 
 ##### Installation
 
 ```bash
-tar -xzf imx585-clearhdr-binary-v1.1.0.tar.gz
-cd imx585-clearhdr-binary-v1.1.0/driver-binary
+tar -xzf imx585-clearhdr-binary-v1.2.0.tar.gz
+cd imx585-clearhdr-binary-v1.2.0/driver-binary
 chmod +x install.sh
 ./install.sh
 sudo reboot
 ```
+
+> The installer detects `config.txt`, reports whether the `dtoverlay=imx585` line is present, and can append it automatically (with backup).
 
 ##### Camera Configuration
 
@@ -434,13 +447,13 @@ sudo reboot
 
 ClearHDR mode is controlled via `v4l2-ctl` before launching rpicam. The sensor subdevice is typically `/dev/v4l-subdev2` (verify with `v4l2-ctl --list-devices`).
 
-**Mode 1: Normal SDR (default)**
+**Mode 1: Normal SDR / LCG (default)**
 
 Standard 12-bit single gain mode, best for well-lit scenes.
 
 ```bash
-# Ensure ClearHDR is off (default after boot)
-v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0
+# Ensure ClearHDR is off and HCG is off (default after boot)
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0,hcg_enable=0
 
 # Preview — Mono camera
 rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json
@@ -449,7 +462,21 @@ rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_m
 rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585.json
 ```
 
-**Mode 2: ClearHDR 12-bit (real-time HDR)**
+**Mode 2: HCG SDR (low-light / high conversion gain)**
+
+Linear 12-bit output with high conversion gain for low-noise / low-light scenes.
+
+```bash
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl wide_dynamic_range=0,hcg_enable=1
+
+# Preview — Mono camera
+rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json
+
+# Preview — Color camera
+rpicam-hello -t 0 --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585.json
+```
+
+**Mode 3: ClearHDR 12-bit (real-time HDR)**
 
 Sensor-internal HCG/LCG fusion with gradation compression. Supports real-time preview, still capture, and video recording.
 
@@ -474,7 +501,7 @@ rpicam-vid --hdr --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mo
 
 > **Note**: Always use `--hdr` together with the `_hdr.json` tuning file for ClearHDR 12-bit. Without `--hdr`, the ISP does not apply HDR tone mapping and the image will appear flat/washed out.
 
-**Mode 3: ClearHDR 16-bit (maximum dynamic range)**
+**Mode 4: ClearHDR 16-bit (maximum dynamic range)**
 
 Full 16-bit linear HDR output. Requires manual exposure and post-processing merge.
 
