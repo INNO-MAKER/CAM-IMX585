@@ -33,33 +33,47 @@ Both models connect via a 4-lane MIPI CSI-2 interface and are supported on **Ras
 
 ## Video Modes
 
+**Normal SDR:**
+
 | Resolution | Frame Rate | Format | Notes |
 | :--- | :--- | :--- | :--- |
 | 1928 × 1090 | 60 fps | R12_CSI2P | 1080p cropped |
-| 3856 × 2180 | 30 fps | R12_CSI2P | 4K native (standard) |
-| 3856 × 2180 | 30 fps | R12_CSI2P | 4K ClearHDR 12-bit ¹ |
-| 3856 × 2180 | 30 fps | R16 | 4K ClearHDR 16-bit ¹ |
+| 3856 × 2180 | 30 fps | R12_CSI2P | 4K all-pixel |
 
-> ¹ ClearHDR modes require the **InnoMaker Unique Driver** (see below).
+**ClearHDR (enabled via `wide_dynamic_range` V4L2 control):**
+
+| Resolution | Frame Rate | Format | Media-bus Code | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| 3856 × 2180 | ~22 fps | 16-bit linear | `SRGGB16` / `Y16` | Smoothest gradation; manual exposure required |
+| 3856 × 2180 | ~22 fps | 12-bit CCMP | `SRGGB12` / `Y12` | Wide range compressed to 12-bit; AGC works |
+
+> ClearHDR halves the frame rate (VMAX ×2) and reduces the maximum analogue gain to 80. Frame rate and exposure limits vary with resolution — use `v4l2-ctl --list-ctrls` for live values.
 
 ---
 
 ## Driver Options
 
-Two driver options are available for Raspberry Pi 5:
+Two installation options are available for Raspberry Pi 5. Both support the full feature set including ClearHDR:
 
-| Driver | Standard 12-bit | ClearHDR 12-bit | ClearHDR 16-bit |
-| :--- | :---: | :---: | :---: |
-| **Open-source Driver** | ✅ | ❌ | ❌ |
-| **InnoMaker Unique Driver** | ✅ | ✅ | ✅ |
+| Option | Method | ClearHDR | Best For |
+| :--- | :--- | :---: | :--- |
+| **Pre-compiled packages** | Extract + run `install.sh` | ✅ | Quick setup on a supported OS/kernel version |
+| **Offline source compilation** | Build from `pkg1` + `pkg2` | ✅ | Any kernel version; custom builds |
 
-### ClearHDR — InnoMaker Unique Feature
+See [`raspberry_pi_driver/UserManual.md §1`](./raspberry_pi_driver/UserManual.md) for installation steps.
 
-**ClearHDR 12-bit** compresses the sensor's HDR output into a standard 12-bit stream, delivering approximately 4× the contrast range of normal mode with no pipeline changes required.
+### ClearHDR
 
-**ClearHDR 16-bit** outputs the full uncompressed 16-bit gradation HDR stream, preserving the finest highlight roll-off for scientific and post-production workflows. Manual exposure is required (PiSP statistics do not support 16-bit data).
+**ClearHDR** is the IMX585 sensor's built-in **single-frame wide dynamic range** feature, based on **Dual Conversion Gain (DCG)**. A single exposure is read out simultaneously at High Gain (HG) and Low Gain (LG) and combined inside the sensor — no motion artifacts, no multi-frame blending.
 
-Both ClearHDR modes are enabled via a single `v4l2-ctl` register write and are toggled at runtime without rebooting.
+Two output formats are available:
+
+| Format | Bit Depth | AGC / Auto-exposure | Notes |
+| :--- | :--- | :--- | :--- |
+| **16-bit linear** (`SRGGB16` / `Y16`) | 16-bit | ❌ Manual only | Smoothest gradation; ISP statistics not valid at 16-bit |
+| **12-bit CCMP** (`SRGGB12` / `Y12`) | 12-bit | ✅ Works | Wide range compressed to 12-bit; plug-and-play |
+
+ClearHDR is toggled at runtime via a single V4L2 control (`wide_dynamic_range`) — no reboot or device-tree change required. See [`raspberry_pi_driver/UserManual.md §4–6`](./raspberry_pi_driver/UserManual.md) for details.
 
 ---
 
