@@ -114,6 +114,36 @@ Driver packages are in [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/):
 
 Check your kernel version with `uname -r` before selecting a package.
 
+#### Package Contents (v2.0)
+
+| Path | Description |
+| :--- | :--- |
+| `binary/imx585.ko` | Precompiled kernel module |
+| `overlays/*.dtbo` | Device-tree overlays for CAM0, CAM1, and dual CAM0+CAM1 |
+| `isp/camera_overrides.imx585_starter.isp` | Starter ISP tuning profile |
+| `install_binary.sh` | One-step installer |
+| `imx585-reload.service` | Boot service — loads Normal mode at every boot |
+| `scripts/switch_mode.sh` | Runtime mode switcher (Normal / HCG / ClearHDR 12-bit / 16-bit) |
+| `scripts/preview_argus*.sh` | Live preview — colour and Mono via Argus ISP |
+| `scripts/preview_mono.sh` | Full-res V4L2 preview for Mono sensor (4K, auto-restores on exit) |
+| `scripts/capture_*.sh` | Image and video capture scripts |
+| `scripts/imx585_raw16_to_pnm.py` | RAW16 → PNM conversion helper |
+| `USER_MANUAL.md` | Full user manual |
+| `scripts/README.md` | Per-script reference |
+
+#### Operating Modes
+
+| Mode | Output | Notes |
+| :--- | :--- | :--- |
+| **Normal (LCG)** | RAW12 linear | Default at boot |
+| **HCG** | RAW12 linear | High conversion gain — lower noise / better low-light |
+| **ClearHDR 12-bit** | 12-bit compressed HDR | Auto-exposure works |
+| **ClearHDR 16-bit** | 16-bit HDR | Manual exposure required |
+
+Validated performance: **20 fps @ 4K**, **40 fps @ 1080p** (2-lane @ 1188 Mbps/lane, CAM0).
+
+For full installation and usage instructions, see `USER_MANUAL.md` inside the package.
+
 ### Preset OS Image
 
 A pre-configured Raspberry Pi OS image with all drivers pre-installed is available:
