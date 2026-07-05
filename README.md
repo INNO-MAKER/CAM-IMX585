@@ -66,12 +66,9 @@ See [`raspberry_pi_driver/UserManual.md §1`](./raspberry_pi_driver/UserManual.m
 
 **ClearHDR** is the IMX585 sensor's built-in **single-frame wide dynamic range** feature, based on **Dual Conversion Gain (DCG)**. A single exposure is read out simultaneously at High Gain (HG) and Low Gain (LG) and combined inside the sensor — no motion artifacts, no multi-frame blending.
 
-Two output formats are available:
+When ClearHDR is enabled (`wide_dynamic_range=1`), libcamera **defaults to 16-bit linear output** (`SRGGB16` / `Y16`). This provides the smoothest highlight gradation, but ISP statistics are not valid at 16-bit — **manual exposure is required**.
 
-| Format | Bit Depth | AGC / Auto-exposure | Notes |
-| :--- | :--- | :--- | :--- |
-| **16-bit linear** (`SRGGB16` / `Y16`) | 16-bit | ❌ Manual only | Smoothest gradation; ISP statistics not valid at 16-bit |
-| **12-bit CCMP** (`SRGGB12` / `Y12`) | 12-bit | ✅ Works | Wide range compressed to 12-bit; plug-and-play |
+For plug-and-play auto-exposure, the **12-bit CCMP output** (`SRGGB12` / `Y12`) compresses the wide dynamic range back into 12-bit, making AGC statistics valid. This is the recommended mode when manual exposure control is not desired.
 
 ClearHDR is toggled at runtime via a single V4L2 control (`wide_dynamic_range`) — no reboot or device-tree change required. See [`raspberry_pi_driver/UserManual.md §4–6`](./raspberry_pi_driver/UserManual.md) for details.
 
