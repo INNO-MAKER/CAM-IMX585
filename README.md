@@ -140,8 +140,6 @@ Check your kernel version with `uname -r` before selecting a package.
 | **ClearHDR 12-bit** | 12-bit compressed HDR | Auto-exposure works |
 | **ClearHDR 16-bit** | 16-bit HDR | Manual exposure required |
 
-Validated performance: **20 fps @ 4K**, **40 fps @ 1080p** (2-lane @ 1188 Mbps/lane, CAM0).
-
 For full installation and usage instructions, see `USER_MANUAL.md` inside the package.
 
 ### Preset OS Image
