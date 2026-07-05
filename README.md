@@ -108,7 +108,14 @@ Quick path:
 
 ### NVIDIA Jetson Orin Nano
 
-Driver packages for kernel `5.15.148-tegra` and `5.15.185-tegra` are in [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/). Contact [sales@inno-maker.com](mailto:sales@inno-maker.com) to obtain the binary.
+Driver packages are in [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/):
+
+| Kernel | Status |
+| :--- | :--- |
+| `5.15.148-tegra` (L4T R36.4.4) | Available — [`jetson-orin-nano-driver/5.15.148/`](./jetson-orin-nano-driver/5.15.148/) |
+| `5.15.185-tegra` | Contact [sales@inno-maker.com](mailto:sales@inno-maker.com) |
+
+Check your kernel version with `uname -r` before selecting a package.
 
 ### Preset OS Image
 
