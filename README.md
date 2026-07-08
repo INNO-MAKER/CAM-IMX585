@@ -66,11 +66,15 @@ See [`raspberry_pi_driver/UserManual.md §1`](./raspberry_pi_driver/UserManual.m
 
 **ClearHDR** is the IMX585 sensor's built-in **single-frame wide dynamic range** feature, based on **Dual Conversion Gain (DCG)**. A single exposure is read out simultaneously at High Gain (HG) and Low Gain (LG) and combined inside the sensor — no motion artifacts, no multi-frame blending.
 
-When ClearHDR is enabled (`wide_dynamic_range=1`), libcamera **defaults to 16-bit linear output** (`SRGGB16` / `Y16`). This provides the smoothest highlight gradation, but ISP statistics are not valid at 16-bit — **manual exposure is required**.
+When ClearHDR is enabled, libcamera **defaults to 16-bit linear output** (`SRGGB16` / `Y16`). This provides the smoothest highlight gradation, but ISP statistics are not valid at 16-bit — **manual exposure is required**.
 
 For plug-and-play auto-exposure, the **12-bit CCMP output** (`SRGGB12` / `Y12`) compresses the wide dynamic range back into 12-bit, making AGC statistics valid. This is the recommended mode when manual exposure control is not desired.
 
-ClearHDR is toggled at runtime via a single V4L2 control (`wide_dynamic_range`) — no reboot or device-tree change required. See [`raspberry_pi_driver/UserManual.md §4–6`](./raspberry_pi_driver/UserManual.md) for details.
+> **Monochrome sensor note:** On the **Mono** variant, the 16-bit ClearHDR output is **not usable** (produces full-frame noise). The Mono ClearHDR path that yields a correct image is the **12-bit CCMP** output. An additional device-tree flag is required to enable this path — see [`raspberry_pi_driver/UserManual.md §2.1`](./raspberry_pi_driver/UserManual.md) for details.
+
+**Confirming ClearHDR is active:** at 4K all-pixel, ClearHDR runs at **~22 fps** (VMAX ×2). If the frame rate remains ~30 fps after enabling ClearHDR, the sensor has not switched modes.
+
+ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device-tree change required. See [`raspberry_pi_driver/UserManual.md §4–6`](./raspberry_pi_driver/UserManual.md) for the full setup guide.
 
 ---
 

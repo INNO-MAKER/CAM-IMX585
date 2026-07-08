@@ -69,14 +69,44 @@ sensor variant, lane count, or link frequency, edit `/boot/firmware/config.txt` 
 
 ```
 camera_auto_detect=0
-dtoverlay=imx585              # default: CAM1, color
-dtoverlay=imx585,cam0         # use the CAM0 port
-dtoverlay=imx585,mono         # monochrome sensor variant
-dtoverlay=imx585,2lane        # 2-lane wiring (default is 4-lane)
-dtoverlay=imx585,cam0,mono    # options combine
+dtoverlay=imx585                 # default: CAM1, color
+dtoverlay=imx585,cam0            # use the CAM0 port
+dtoverlay=imx585,mono            # monochrome sensor variant
+dtoverlay=imx585,ccmp            # enable the 12-bit CCMP ClearHDR path
+dtoverlay=imx585,2lane           # 2-lane wiring (default is 4-lane)
+dtoverlay=imx585,cam0,mono       # options combine
+dtoverlay=imx585,cam0,mono,ccmp  # mono sensor + ClearHDR (recommended, see 2.1)
 ```
 
 Options combine freely, e.g. `dtoverlay=imx585,mono,cam0,link-frequency=297000000`.
+
+### 2.1 Monochrome sensor + ClearHDR (`ccmp`)
+
+For a **color** sensor ClearHDR works out of the box in 16-bit linear mode. On a **monochrome**
+sensor the 16-bit linear ClearHDR output is **not usable — it appears as full-frame snow**; the mono
+ClearHDR path that produces a correct image is the **12-bit CCMP** (gradient-compressed) output.
+
+Two things are needed to use it, and the overlay flag is one of them:
+
+1. **Overlay** — add `ccmp` to the mono line so the driver offers the 12-bit CCMP output:
+
+   ```
+   camera_auto_detect=0
+   dtoverlay=imx585,cam0,mono,ccmp
+   ```
+
+2. **Capture in 12-bit** — the application must request the 12-bit mode (otherwise the sensor still
+   defaults to 16-bit). The bundled `preview_fullres.sh --hdr` does this automatically; manually it is:
+
+   ```bash
+   rpicam-hello -t 0 --mode 3840:2160:12 \
+       --tuning-file /usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json
+   ```
+
+**Confirm ClearHDR is actually engaged** by the frame rate: at 4K all-pixel, ClearHDR runs at
+~22 fps (frame length doubled) versus ~30 fps for normal SDR. Same-looking-but-30 fps means SDR;
+~22 fps means ClearHDR is active. `ccmp` is harmless for a color sensor (it only adds the 12-bit
+option; color ClearHDR still defaults to 16-bit linear).
 
 For the full explanation of each option — **lane count**, the **link-frequency table** (mbps/lane vs
 max framerate), **sync modes** (internal-leader / internal-follower / external), and the always-on
@@ -131,7 +161,7 @@ When ClearHDR is enabled the driver automatically adjusts these operating points
 
 | Item | Normal SDR | ClearHDR |
 |---|---|---|
-| WDMODE (`0x301a`) | Normal (`0x00`) | Clear HDR (`0x10`) |
+| Sensor mode | Normal | Clear HDR |
 | Max analogue gain | 240 | **80** |
 | Max exposure (lines) | set by VMAX | **~4484** (varies by mode) |
 | VMAX (frame length) | base | **×2** (frame rate halved) |
@@ -165,6 +195,21 @@ TUNING=/usr/local/share/libcamera/ipa/rpi/pisp/imx585_mono.json ./clearhdr.sh pr
 ```
 
 The manual steps below are the equivalent without the script.
+
+**Full-resolution preview helper (`preview_fullres.sh`).** A second helper, `preview_fullres.sh`, is
+included at the package root for a 4K all-pixel live preview. It auto-detects a mono sensor (and picks
+`imx585_mono.json` automatically), and with `--hdr` it enables ClearHDR **and forces the 12-bit CCMP
+mode** — the correct mono ClearHDR path (see [Section 2.1](#21-monochrome-sensor--clearhdr-ccmp)).
+
+```bash
+./preview_fullres.sh              # full-res SDR preview, auto AE/AWB
+./preview_fullres.sh --hdr        # enable ClearHDR (12-bit CCMP) and preview
+./preview_fullres.sh --mono       # force the mono tuning file
+./preview_fullres.sh --hdr --manual   # ClearHDR with a known-good manual exposure
+```
+
+Requires the `ccmp` overlay flag for the mono HDR path (Section 2.1). Extra `rpicam-hello` arguments
+pass straight through, e.g. `./preview_fullres.sh --hdr -t 10000`.
 
 ### 5.2 Enable / disable ClearHDR
 
