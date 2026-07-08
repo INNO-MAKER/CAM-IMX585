@@ -70,9 +70,7 @@ When ClearHDR is enabled, libcamera **defaults to 16-bit linear output** (`SRGGB
 
 For plug-and-play auto-exposure, the **12-bit CCMP output** (`SRGGB12` / `Y12`) compresses the wide dynamic range back into 12-bit, making AGC statistics valid. This is the recommended mode when manual exposure control is not desired.
 
-> **Monochrome sensor note:** On the **Mono** variant, the 16-bit ClearHDR output is **not usable** (produces full-frame noise). The Mono ClearHDR path that yields a correct image is the **12-bit CCMP** output. An additional device-tree flag is required to enable this path — see [`raspberry_pi_driver/UserManual.md §2.1`](./raspberry_pi_driver/UserManual.md) for details.
-
-**Confirming ClearHDR is active:** at 4K all-pixel, ClearHDR runs at **~22 fps** (VMAX ×2). If the frame rate remains ~30 fps after enabling ClearHDR, the sensor has not switched modes.
+> **Monochrome sensor note:** On the **Mono** variant, the **12-bit CCMP** output must be used for ClearHDR — the 16-bit output produces full-frame noise on a mono sensor. The **Color** variant supports both 16-bit and 12-bit CCMP outputs.
 
 ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device-tree change required. See [`raspberry_pi_driver/UserManual.md §4–6`](./raspberry_pi_driver/UserManual.md) for the full setup guide.
 
