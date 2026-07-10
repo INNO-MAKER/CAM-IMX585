@@ -88,6 +88,8 @@ ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device
 | [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/) | Jetson Orin Nano driver packages (contact sales for binary) |
 | [`i2c-tools/`](./i2c-tools/) | Python utility for EEPROM read/write over I2C |
 | [`i2c-tools/README.md`](./i2c-tools/README.md) | EEPROM usage documentation |
+| [`mechanical/`](./mechanical/) | Mechanical design files |
+| [`mechanical/CAM-IMX585.stp`](./mechanical/CAM-IMX585.stp) | 3D model — STEP format (compatible with SolidWorks, Fusion 360, FreeCAD, etc.) |
 | [`CAM-IMX585-Mono-Color-User-Manual.pdf`](./CAM-IMX585-Mono-Color-User-Manual.pdf) | Hardware user manual (PDF) |
 
 ---
