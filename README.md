@@ -69,6 +69,44 @@ Three installation options are available for Raspberry Pi 5. All support the ful
 
 See [`raspberry_pi_driver/UserManual.md §1`](./raspberry_pi_driver/UserManual.md) for installation steps.
 
+#### Offline Source Compilation — Quick Reference
+
+> Source packages are available to customers. Contact [sales@inno-maker.com](mailto:sales@inno-maker.com) to obtain them.
+
+**Package 1 — Kernel driver** (`pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz`)
+
+Builds and installs the IMX585 V4L2 kernel module via DKMS, installs the device-tree overlay, and updates `/boot/firmware/config.txt` automatically.
+
+```bash
+tar -xzf pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz
+cd pkg1-imx585-driver
+sudo ./install.sh
+sudo reboot
+```
+
+After reboot, verify:
+```bash
+modinfo -F filename imx585      # confirm module path
+rpicam-hello --list-cameras
+```
+
+**Package 2 — libcamera + rpicam-apps** (`pkg2-rpicam-libcamera-offline-source.tar.gz`)
+
+Compiles libcamera (with IMX585 IPA) and rpicam-apps from source. Run after Package 1.
+
+```bash
+tar -xzf pkg2-rpicam-libcamera-offline-source.tar.gz
+cd pkg2-rpicam-libcamera-offline
+sudo ./build.sh
+```
+
+Build time: ~30–40 minutes. After completion:
+```bash
+rpicam-hello --list-cameras
+rpicam-hello -t 0
+rpicam-still -o test.jpg
+```
+
 ### ClearHDR
 
 **ClearHDR** is the IMX585 sensor's built-in **single-frame wide dynamic range** feature, based on **Dual Conversion Gain (DCG)**. A single exposure is read out simultaneously at High Gain (HG) and Low Gain (LG) and combined inside the sensor — no motion artifacts, no multi-frame blending.
@@ -90,8 +128,8 @@ ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device
 | [`raspberry_pi_driver/`](./raspberry_pi_driver/) | All Raspberry Pi 5 driver packages and user manual |
 | [`raspberry_pi_driver/UserManual.md`](./raspberry_pi_driver/UserManual.md) | Full installation, ClearHDR setup, and usage guide for Raspberry Pi 5 |
 | [`raspberry_pi_driver/precompiler-driver/`](./raspberry_pi_driver/precompiler-driver/) | Pre-compiled kernel modules for specific OS/kernel versions |
-| [`raspberry_pi_driver/pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz`](./raspberry_pi_driver/pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz) | Offline kernel driver source package |
-| [`raspberry_pi_driver/pkg2-rpicam-libcamera-offline-source.tar.gz`](./raspberry_pi_driver/pkg2-rpicam-libcamera-offline-source.tar.gz) | libcamera + rpicam-apps source package (offline build) |
+| `raspberry_pi_driver/pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz` | Kernel driver source package — available to customers (contact sales) |
+| `raspberry_pi_driver/pkg2-rpicam-libcamera-offline-source.tar.gz` | libcamera + rpicam-apps source package — available to customers (contact sales) |
 | [`raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz) | libcamera 0.6.0 runtime package for Debian Trixie (install without recompiling) |
 | [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/) | Jetson Orin Nano driver packages (contact sales for binary) |
 | [`i2c-tools/`](./i2c-tools/) | Python utility for EEPROM read/write over I2C |
