@@ -53,13 +53,13 @@ Both models connect via a 4-lane MIPI CSI-2 interface and are supported on **Ras
 
 ## Driver Options
 
-Three installation options are available for Raspberry Pi 5. All support the full feature set including ClearHDR:
+Three Raspberry Pi 5 deployment paths are available. Install a compatible kernel driver before installing the runtime package.
 
 | Option | Method | ClearHDR | Best For |
 | :--- | :--- | :---: | :--- |
 | **Pre-compiled driver packages** | Extract + run `install.sh` | ✅ | Quick setup on a supported OS/kernel version |
 | **Runtime package** | Extract + run `install.sh` | ✅ | Update libcamera only, kernel driver already installed |
-| **Offline source compilation** | Build from `pkg1` + `pkg2` | ✅ | Any kernel version; custom builds |
+| **Upstream open-source driver** | Build the external source with DKMS | Refer to upstream | Source review and custom builds |
 
 **Supported pre-compiled driver versions:**
 
@@ -69,43 +69,23 @@ Three installation options are available for Raspberry Pi 5. All support the ful
 
 See [`raspberry_pi_driver/UserManual.md §1`](./raspberry_pi_driver/UserManual.md) for installation steps.
 
-#### Offline Source Compilation — Quick Reference
+#### Runtime Package and Upstream Source
 
-> Both offline source packages are available in this repository.
+**Runtime Package — libcamera 0.6.0 + rpicam-apps** ([`imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz))
 
-**Package 1 — Kernel driver** ([`pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz`](./raspberry_pi_driver/precompiler-driver/pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz))
-
-Builds and installs the IMX585 V4L2 kernel module via DKMS, installs the device-tree overlay, and updates `/boot/firmware/config.txt` automatically.
+Installs the IMX585-enabled libcamera 0.6.0 and rpicam-apps userspace stack under `/usr/local` on Debian Trixie (13) / Raspberry Pi 5. It does not install a kernel driver; install a compatible driver first.
 
 ```bash
-tar -xzf pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz
-cd pkg1-imx585-driver
+tar -xzf imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz
+cd imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712
 sudo ./install.sh
-sudo reboot
 ```
 
-After reboot, verify:
-```bash
-modinfo -F filename imx585      # confirm module path
-rpicam-hello --list-cameras
-```
+The accompanying [SHA-256 file](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256) verifies the archive before installation.
 
-**Package 2 — libcamera + rpicam-apps** ([`pkg2-rpicam-libcamera-offline.tar.gz`](./raspberry_pi_driver/pkg2-rpicam-libcamera-offline.tar.gz))
+**Upstream Open-Source Kernel Driver** — [`will127534/imx585-v4l2-driver`](https://github.com/will127534/imx585-v4l2-driver)
 
-Compiles libcamera (with IMX585 IPA) and rpicam-apps from source. Run after Package 1.
-
-```bash
-tar -xzf pkg2-rpicam-libcamera-offline.tar.gz
-cd pkg2-rpicam-libcamera-offline
-sudo ./build.sh
-```
-
-Build time: ~30–40 minutes. After completion:
-```bash
-rpicam-hello --list-cameras
-rpicam-hello -t 0
-rpicam-still -o test.jpg
-```
+The offline `pkg1` source archive is not distributed in this repository. The linked public upstream project provides IMX585 V4L2 driver source and its own DKMS build and setup instructions. Review its compatibility notes and documentation before using it with this camera module.
 
 ### ClearHDR
 
@@ -128,9 +108,9 @@ ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device
 | [`raspberry_pi_driver/`](./raspberry_pi_driver/) | All Raspberry Pi 5 driver packages and user manual |
 | [`raspberry_pi_driver/UserManual.md`](./raspberry_pi_driver/UserManual.md) | Full installation, ClearHDR setup, and usage guide for Raspberry Pi 5 |
 | [`raspberry_pi_driver/precompiler-driver/`](./raspberry_pi_driver/precompiler-driver/) | Pre-compiled kernel modules for specific OS/kernel versions |
-| [`raspberry_pi_driver/precompiler-driver/pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz`](./raspberry_pi_driver/precompiler-driver/pkg1-imx585-driver-v1.0-6.12y-offline.tar.gz) | Offline kernel driver source package |
-| [`raspberry_pi_driver/pkg2-rpicam-libcamera-offline.tar.gz`](./raspberry_pi_driver/pkg2-rpicam-libcamera-offline.tar.gz) | Offline libcamera + rpicam-apps source package |
+| [`will127534/imx585-v4l2-driver`](https://github.com/will127534/imx585-v4l2-driver) | Public upstream IMX585 V4L2 kernel-driver source and setup documentation |
 | [`raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz) | libcamera 0.6.0 runtime package for Debian Trixie (install without recompiling) |
+| [`raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256) | SHA-256 verification file for the runtime package |
 | [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/) | Jetson Orin Nano driver packages and support files |
 | [`jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz) | Jetson Orin Nano binary package for L4T R36.4.4 / kernel 5.15.148-tegra |
 | [`i2c-tools/`](./i2c-tools/) | Python utility for EEPROM read/write over I2C |
@@ -150,9 +130,10 @@ Full installation instructions, device-tree options, ClearHDR setup, and capture
 > **[`raspberry_pi_driver/UserManual.md`](./raspberry_pi_driver/UserManual.md)**
 
 Quick path:
-1. Choose a driver option (pre-compiled or source compilation) — see `UserManual.md §1`
+1. Choose a compatible pre-compiled driver or review the linked upstream open-source driver.
 2. Configure `/boot/firmware/config.txt` with the appropriate `dtoverlay` — see `UserManual.md §2`
-3. Reboot and verify with `rpicam-hello --list-cameras`
+3. Install the runtime package if its bundled libcamera + rpicam-apps stack is required.
+4. Reboot after driver or device-tree changes, then verify with `rpicam-hello --list-cameras`.
 
 ### NVIDIA Jetson Orin Nano
 
