@@ -113,6 +113,7 @@ ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device
 | [`raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256) | SHA-256 verification file for the runtime package |
 | [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/) | Jetson Orin Nano driver packages and support files |
 | [`jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz) | Jetson Orin Nano binary package for L4T R36.4.4 / kernel 5.15.148-tegra |
+| [`jetson-orin-nano-driver/5.15.185/imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.185/imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz) | Jetson Orin Nano binary package for kernel 5.15.185-tegra |
 | [`i2c-tools/`](./i2c-tools/) | Python utility for EEPROM read/write over I2C |
 | [`i2c-tools/README.md`](./i2c-tools/README.md) | EEPROM usage documentation |
 | [`mechanical/`](./mechanical/) | Mechanical design files |
@@ -142,7 +143,7 @@ Driver packages are in [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/):
 | Kernel | Status |
 | :--- | :--- |
 | `5.15.148-tegra` (L4T R36.4.4) | Available — [`imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz) |
-| `5.15.185-tegra` | Contact [sales@inno-maker.com](mailto:sales@inno-maker.com) |
+| `5.15.185-tegra` | Available — [`imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.185/imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz) |
 
 Check your kernel version with `uname -r` before selecting a package.
 
