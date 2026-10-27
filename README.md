@@ -2,7 +2,7 @@
 
 ![CAM-IMX585](imx585.png)
 
-**8.3MP 4K MIPI Camera Module — Sony IMX585 Starvis 2 · Raspberry Pi 5 · NVIDIA Jetson Orin Nano**
+**8.3MP 4K MIPI Camera Module — Sony IMX585 Starvis 2 · Raspberry Pi 5**
 
 ---
 
@@ -10,7 +10,7 @@
 
 The **CAM-IMX585-Mono** and **CAM-IMX585-Color** are professional-grade MIPI camera modules built on the Sony IMX585 Starvis 2 back-illuminated CMOS sensor. The Mono variant delivers enhanced low-light sensitivity and near-infrared response; the Color variant provides full RGB imaging with the same 8.3MP 4K resolution.
 
-Both models connect via a 4-lane MIPI CSI-2 interface and are supported on **Raspberry Pi 5** and **NVIDIA Jetson Orin Nano**. An on-board **FT24C02A EEPROM** (256 bytes, I2C 0x50) is available for calibration data storage.
+Both models connect via a 4-lane MIPI CSI-2 interface. An on-board **FT24C02A EEPROM** (256 bytes, I2C 0x50) is available for calibration data storage.
 
 ---
 
@@ -27,7 +27,7 @@ Both models connect via a 4-lane MIPI CSI-2 interface and are supported on **Ras
 | **Lens Mount** | CS-mount / M12 |
 | **Dimensions** | 38 mm × 38 mm |
 | **EEPROM** | FT24C02A, 256 bytes, I2C 0x50 |
-| **Supported Platforms** | Raspberry Pi 5 · NVIDIA Jetson Orin Nano |
+| **Supported Platform** | Raspberry Pi 5 |
 
 ---
 
@@ -111,9 +111,6 @@ ClearHDR is toggled at runtime via a single V4L2 control — no reboot or device
 | [`will127534/imx585-v4l2-driver`](https://github.com/will127534/imx585-v4l2-driver) | Public upstream IMX585 V4L2 kernel-driver source and setup documentation |
 | [`raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz) | libcamera 0.6.0 runtime package for Debian Trixie (install without recompiling) |
 | [`raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256`](./raspberry_pi_driver/imx585-runtime-pi5-libcamera0.6.0-debian13-20260719-233712.tar.gz.sha256) | SHA-256 verification file for the runtime package |
-| [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/) | Jetson Orin Nano driver packages and support files |
-| [`jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz) | Jetson Orin Nano binary package for L4T R36.4.4 / kernel 5.15.148-tegra |
-| [`jetson-orin-nano-driver/5.15.185/imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.185/imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz) | Jetson Orin Nano binary package for kernel 5.15.185-tegra |
 | [`i2c-tools/`](./i2c-tools/) | Python utility for EEPROM read/write over I2C |
 | [`i2c-tools/README.md`](./i2c-tools/README.md) | EEPROM usage documentation |
 | [`mechanical/`](./mechanical/) | Mechanical design files |
@@ -135,45 +132,6 @@ Quick path:
 2. Configure `/boot/firmware/config.txt` with the appropriate `dtoverlay` — see `UserManual.md §2`
 3. Install the runtime package if its bundled libcamera + rpicam-apps stack is required.
 4. Reboot after driver or device-tree changes, then verify with `rpicam-hello --list-cameras`.
-
-### NVIDIA Jetson Orin Nano
-
-Driver packages are in [`jetson-orin-nano-driver/`](./jetson-orin-nano-driver/):
-
-| Kernel | Status |
-| :--- | :--- |
-| `5.15.148-tegra` (L4T R36.4.4) | Available — [`imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.148/imx585_tegra_binary_1188_working_5.15.148_20260705_v2_0.tar.gz) |
-| `5.15.185-tegra` | Available — [`imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz`](./jetson-orin-nano-driver/5.15.185/imx585_tegra_binary_1188_working_5.15.185_20260627_v2_0.tar.gz) |
-
-Check your kernel version with `uname -r` before selecting a package.
-
-#### Package Contents (v2.0)
-
-| Path | Description |
-| :--- | :--- |
-| `binary/imx585.ko` | Precompiled kernel module |
-| `overlays/*.dtbo` | Device-tree overlays for CAM0, CAM1, and dual CAM0+CAM1 |
-| `isp/camera_overrides.imx585_starter.isp` | Starter ISP tuning profile |
-| `install_binary.sh` | One-step installer |
-| `imx585-reload.service` | Boot service — loads Normal mode at every boot |
-| `scripts/switch_mode.sh` | Runtime mode switcher (Normal / HCG / ClearHDR 12-bit / 16-bit) |
-| `scripts/preview_argus*.sh` | Live preview — colour and Mono via Argus ISP |
-| `scripts/preview_mono.sh` | Full-res V4L2 preview for Mono sensor (4K, auto-restores on exit) |
-| `scripts/capture_*.sh` | Image and video capture scripts |
-| `scripts/imx585_raw16_to_pnm.py` | RAW16 → PNM conversion helper |
-| `USER_MANUAL.md` | Full user manual |
-| `scripts/README.md` | Per-script reference |
-
-#### Operating Modes
-
-| Mode | Output | Notes |
-| :--- | :--- | :--- |
-| **Normal (LCG)** | RAW12 linear | Default at boot |
-| **HCG** | RAW12 linear | High conversion gain — lower noise / better low-light |
-| **ClearHDR 12-bit** | 12-bit compressed HDR | Auto-exposure works |
-| **ClearHDR 16-bit** | 16-bit HDR | Manual exposure required |
-
-For full installation and usage instructions, see `USER_MANUAL.md` inside the package.
 
 ### Preset OS Image
 
